@@ -1,0 +1,20 @@
+alldist                 NPML estimation or Gaussian quadrature for
+                        overdispersed GLM's and variance component
+                        models
+dkern                   Aitchison-Aitken kernel
+family.glmmNPML         Generic functions for objects of class glmmNPML
+                        or glmmGQ
+gqz                     Gauss-Hermite integration points
+hosp                    The Pennsylvanian Hospital Stay Data
+irlsuicide              Irish Suicide Data
+masspoint.classifier    Classify observations to mass points
+npmlreg-package         Nonparametric maximum likelihood estimation for
+                        random effect models
+plot.glmmNPML           Plot Diagnostics for objects of class glmmNPML
+                        or glmmGQ
+predict.glmmNPML        Prediction from objects of class glmmNPML or
+                        glmmGQ
+summary.glmmNPML        Summarizing finite mixture regression fits
+tolfind                 Grid search over tol for NPML estimation of
+                        (generalized) random effect models
+weightslogl.calc.w      Internal npmlreg functions
