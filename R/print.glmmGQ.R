@@ -10,7 +10,7 @@ function(x,digits=max(3,getOption('digits')-3), ...)
   if (x$family$family=='Gamma'&& x$Misc$lambda<=1/length(x$masses)){ #print shape only if it is constant over components
        cat('\nMLE of shape parameter:\t  ',format(signif(x$shape$shape,digits)),'\n')
   }
-  cat('-2 log L:\t   ',format(round(x$Disparity,digits=1)),"\n")
+  cat('-2 log L:\t   ',format(round(x$disparity,digits=1)),"\n")
   invisible(x)
 }
 

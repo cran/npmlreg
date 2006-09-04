@@ -4,7 +4,7 @@
 \usepackage{color}
 \usepackage{colordvi}
 \usepackage{graphicx}
-
+\usepackage[round]{natbib}
 
 \title{Nonparametric maximum likelihood estimation for random effect models in R\\
 \vspace{1cm}
@@ -41,18 +41,27 @@
 
 \section{Introduction}
 
-Nonparametric maximum likelihood (NPML) estimation is an attractive tool for the fitting of generalized linear models with random effects, 
-which can be considered as a special case of generalized linear mixed models.   This handbook contains some examples on how to use the  
-functions contained in the  R package {\bf npmlreg},
-which is available for download at
+Nonparametric maximum likelihood (NPML) estimation is an attractive tool for the fitting 
+of generalized linear models with random effects, 
+which can be considered as a special case of generalized linear mixed models (GLMMs).  
+One crucial advantage of the NPML approach is that the random effect distribution does not need 
+to be specified a priori, whereas the huge body of literature on GLMMs restricts nearly exclusively 
+on normally distributed random effects. Further, complicated integrations are avoided by approxmating 
+the marginal likelihhod by a simple finite mixture, for which standard fitting algorithms based on EM 
+exist and can be applied. NPML for generalized linear models with random effects was previously implemented 
+by Aitkin \& Francis (1995) in the GLIM4 language, which is however no longer widely used. The main functions 
+of this package,  {\tt alldist}  (for overdispersion) and {\tt allvc} (for variance component models), 
+are  modified and extended versions of their homonymous counterparts in GLIM4, and have been translated 
+to R originally by Ross Darnell.
+
+
+
+In this handbook the concept of NPML estimation is briefly explained (Section \ref{method}) and
+ a variety of  data examples are given (Section \ref{examples}), which illustrate the functionalities 
+ of {\tt alldist} and {\tt allvc}. The  R package {\bf npmlreg} is available for download at
 \begin{center}
 {\tt http://www.nuigalway.ie/maths/je/npml.html}.
 \end{center}
-The main functions of this package are {\tt alldist}  (for overdispersion) and {\tt allvc} (for variance component models), which  are  modified and extended versions of the
-corresponding functions in GLIM 4 (Aitkin \& Francis, 1995), translated to R originally by Ross Darnell.
-
-In this handbook the concept of NPML estimation is briefly explained (Section \ref{method}) and
- a variety of  data examples are given (Section \ref{examples}). 
 
  
 \vspace{0.3cm}
@@ -84,7 +93,12 @@ correlation in the data or important explanatory variables not
 included in the model. In order to account for additional
 unexplained  variability of the individual observations,
  a random effect $z_i$ with density $g(z)$ is
-included  into the linear predictor
+included  into the linear predictor\footnote{We refer to a model 
+defined in this manner as a {\it generalized linear model with random effect}, or shorter, 
+{\it random effect model},  whereas the  more general linear predictor
+ $\eta_i=\beta'x_i+\gamma'_i\tilde{x_i}$, with $\gamma_i$ random and $\tilde{x_i}$ 
+ typically being a subvector of $x_i$,
+entails a {\it generalized linear mixed model}.} 
 \[
 \eta_i=\beta'x_i+z_i.
 \]
@@ -146,7 +160,7 @@ one refers to this method as `Nonparametric Maximum Likelihood' (NPML) estimatio
 of overdispersed generalized linear models by Aitkin (1996a).  In difference to the original implementation in GLIM4, we use a 'damping' procedure in the initial cycles of the algorithm, which
 reduces the sensitivity of the EM algorithm to the optimal choice of {\tt tol} for exponential
 family densities possessing a dispersion parameter (as Gaussian or Gamma). For  technical details on the implementation of the algorithm, 
-see Einbeck \& Hinde (2005).  
+see Einbeck \& Hinde (2006).  
 
 
 \section{Examples}\label{examples}
@@ -154,8 +168,8 @@ see Einbeck \& Hinde (2005).
 \subsection{Finite Gaussian mixtures: The galaxy data}
 
 The data considered in this example are the recession velocities (in $km/s$) of 82 galaxies receding from our own, sampled from six well-separated conic sections of space.
-The full data were given by Postman et al. (1986).  They are part of the R package {\em MASS} as data set {\em galaxies}.  Note that, in this dataset, 
-there is a typo in the 78th observation, which should be 26960 instead of 26690. We correct this to obatin consistent and 
+The full data were given by Postman et al. (1986).  They are part of the R package {\bf MASS} as data set {\em galaxies}.  Note that, in this dataset, 
+there is a typo in the 78th observation, which should be 26960 instead of 26690. We correct this to obtain consistent and 
 comparable results  with those presented in Aitkin et al. (2005) and other references.
 
 %1
@@ -163,6 +177,7 @@ comparable results  with those presented in Aitkin et al. (2005) and other refer
 data(galaxies, package="MASS")
 galaxies[78]<-26960
 gal<-as.data.frame(galaxies)
+rm(galaxies)
 \end{Scode}
 
 Next, we construct a new  variable {\tt v1000} from {\tt galaxies}, which  represents  
@@ -174,7 +189,7 @@ gal$v1000<- gal$galaxies/1000
 gal$v1000
 \end{Scode}
 
-and load the {\bf npmlreg} package:
+\noindent and load the {\bf npmlreg} package:
 
 %3
 \begin{Scode}
@@ -186,7 +201,7 @@ Fitting a simple constant normal model yields
 \begin{Scode}
 glm(v1000~1,data=gal)
 \end{Scode}
-which is the same as a NPML estimation with one mass point, fitting a `mixture' of one normal component: 
+\noindent which is the same as a NPML estimation with one mass point, fitting a `mixture' of one normal component: 
 %5
 \begin{Scode}
 (galaxy.np1 <- alldist(v1000~1,random=~1,random.distribution='np',k=1,data=gal))
@@ -204,10 +219,10 @@ The option {\tt data=....} is mandatory, even if the data frame was {\tt attach}
 The deviance can be obtained by 
 %6
 \begin{Scode}
-galaxy.np1$Dev
+galaxy.np1$dev
 \end{Scode}
 
-which is certainly the same as for the glm. Next , we fit discrete mixtures $\sum_{k=1}^K\pi_kf_k$, where the $f_k$ are normal densities with expectation 
+\noindent which is certainly the same as for the GLM. Next , we fit discrete mixtures $\sum_{k=1}^K\pi_kf_k$, where the $f_k$ are normal densities with expectation 
 $\mu_k$ and unknown, but equal variances $\sigma^2=\sigma^2_k$.
 Fitting models with $K=2, 3, 4$, and 5 mass points, one obtains
 %7
@@ -234,11 +249,11 @@ Fig. 1: Convergence of EM algorithm for NPML estimation with 4 mass points.  Top
 As {\tt random.distribution='np'} is the default setting, it can  be omitted. For 5 to 9 mass points, we only report the disparity values
 %9
 \begin{Scode}
-(galaxy.np5 <- alldist(v1000~1,random=~1,k=5,data=gal, verbose=FALSE))$Disp
-(galaxy.np6 <- alldist(v1000~1,random=~1,k=6,tol=0.2,data=gal,verbose=FALSE))$Disp
-(galaxy.np7 <- alldist(v1000~1,random=~1,k=7,tol=0.12,data=gal,verbose=FALSE))$Disp
-(galaxy.np8 <- alldist(v1000~1,random=~1,k=8,tol=0.2,data=gal,verbose=FALSE))$Disp
-(galaxy.np9 <- alldist(v1000~1,random=~1,k=9,tol=0.06,data=gal,verbose=FALSE))$Disp
+(galaxy.np5 <- alldist(v1000~1,random=~1,k=5,data=gal, verbose=FALSE))$disp
+(galaxy.np6 <- alldist(v1000~1,random=~1,k=6,tol=0.2,data=gal,verbose=FALSE))$disp
+(galaxy.np7 <- alldist(v1000~1,random=~1,k=7,tol=0.12,data=gal,verbose=FALSE))$disp
+(galaxy.np8 <- alldist(v1000~1,random=~1,k=8,tol=0.2,data=gal,verbose=FALSE))$disp
+(galaxy.np9 <- alldist(v1000~1,random=~1,k=9,tol=0.06,data=gal,verbose=FALSE))$disp
 \end{Scode}
 indicating that the disparity stabilizes at about 8 mass points. Note that in some cases it was necessary to modify the optional parameter {\tt tol} 
 to obtain the disparity values given above. The {\tt tol} parameter influences the position of the starting points, where
@@ -246,7 +261,7 @@ values {\tt tol} $< 1$ mean concentrated values compared to the default setting 
 for 2 and 5 mass points are better than those obtained by Aitkin (2001) with GLIM 4.  
 One reason for that is the applied damping procedure: As the algorithm is less sensitive to the optimal choice of {\tt tol}, 
 the optimal solutions are found more easily.  An assisting tool in the selection of {\tt tol} is the R function {\tt tolfind} included in  
-the package {\em npml} (see Appendix). 
+the package {\bf npmlreg}. 
 
 
 To fit a Gaussian mixture with unequal standard deviations $\sigma_k$, $k=1, \ldots, K$ varying over the components, the possibility of smoothing the standard 
@@ -256,7 +271,7 @@ W(x,y|\lambda)=\left\{\begin{array}{lcc}\lambda &\mbox{if}  & y=x\\
                                         (1-\lambda)/(K-1)   &\mbox{if}  &y \not= x\\
                        \end{array}\right.
                         \]
-(Aitchison and Aitken, 1976). The setting $\lambda=1/K$  corresponds to the extreme case 'maximal smoothing' (i.e. equal 
+(Aitchison and Aitken, 1976). The setting $\lambda=1/K$  corresponds to the extreme case `maximal smoothing' (i.e. equal 
 variances $\sigma^2=\sigma^2_k$.), while $\lambda = 1$ means that all standard deviations are calculated within the
     components (i.e. unequal variances).   Statistically sensible settings are only
     $1/K \le  \lambda  \le 1$.  The default setting $\lambda= 0$ is automatically mapped to 
@@ -270,22 +285,22 @@ summary(galaxy.np4u <- alldist(v1000~1, random=~1, k=4, tol=0.5, data=gal, lambd
 
 One gets deeper insight into the fitted model looking at diagnostic plots. Calling
 
-%11a
+%11
 \begin{Scode}{fig=FALSE, eval=FALSE, echo=TRUE}{height=4}
 plot(galaxy.np4u, plot.opt=15, height=5)
 \end{Scode}
 
-%11
-gives the disparities and EM trajectories as above (Fig. 2 top), and additionally two plots showing the empirical Bayes predictions
-vs the true responses, and the component posterior probabilities ($w_{ik}$) against the residuals ($y_i-x_i\hat{\beta}$), respectively. In the former plot (Fig. 2 left bottom), one sees nicely how  the
+\noindent gives the disparities and EM trajectories as above (Fig. 2 top), and additionally two plots showing the empirical Bayes predictions
+vs the true responses, and the component posterior probabilities ($w_{ik}$) against the fixed part residuals ($y_i-x_i\hat{\beta}$), respectively. In the former plot (Fig. 2 left bottom), one sees nicely how  the
 predicted values are `flattened' within the custers and smoothed between. In the latter plot (Fig. 2 right bottom), one gets an impression 
 of the discriminatory power of the mixture components. Throughout all plots, one colour corresponds to the same particular mass point.
 
-An important remark should be given here: Interpretation (and definition!) of the deviance $D=-2\phi\log L + 2\phi\log L_{saturated}$, provided in {\tt \$Deviance}, is not clear when using unequal 
+An important remark should be given here: Interpretation (and definition!) of the deviance $D=-2\phi\log L + 2\phi\log L_{saturated}$, provided in {\tt \$deviance}, is not clear when using unequal 
 dispersion parameters. In the present implementation, deviances are calculated in this case in a somewhat makeshift manner using the {\it equal} dispersion parameter for the $\phi$ preceding the log-likelihood, and the {\it unequal} dispersion parameters within the log-likelihood.
 Hence, it is strictly recommended to work with the disparity rather with the deviance in the case of unequal component dispersion parameters, as the the disparity does not share this problem. This is also
 the reason why we prefer to work with disparities in general, and why disparities (and not deviances) are displayed in the summaries.  
 
+%12
 \begin{minipage}{21cm}
 %\includegraphics[height=13cm,width=15cm]{4uforweb.ps}
 \begin{Scode}{fig=TRUE, echo=FALSE,height=4}
@@ -320,20 +335,20 @@ gives a likelihood-spike free solution with disparity  357.8, which is a good pa
 If likelihood spikes occur for any {\tt tol}, one can enable the spike protection ({\tt spike.protect=1}), which stops the algorithm as soon
 as one component starts to enter a likelihood spike.  for instance, running
 
-%12
+%13
 \begin{Scode}
 (galaxy.np8us <- alldist(v1000~1, random=~1, k=8, tol=0.5, data=gal, lambda=1, verbose=FALSE, spike.protect=TRUE))
 galaxy.np8us$sdev$sdevk
 \end{Scode}
 
-gives us  estimates of mass points, masses, and standard deviations of the mixture components. These values 
+\noindent gives us  estimates of mass points, masses, and standard deviations of the mixture components. These values 
 have to be interpreted with care, as the displayed disparity is normally not correct when the algorithm does not have converged. 
 One notices from this output that the 8th mass point is responsible for the likelihood spike.
 
 The better approach is to set the smoothing parameter equal to $\lambda=0.99$, 
 which corresponds to unequal standard deviations with a very low amount
 of smoothing among components:
-%13
+%14
 \begin{Scode}
 (galaxy.np8ud <- alldist(v1000~1, random=~1, k=8, tol=0.5, data=gal, lambda=0.99))
 galaxy.np8ud$sdev$sdevk
@@ -345,7 +360,7 @@ is shown in Fig. 2: Red circles correspond to {\tt tol} values where the spike p
  hence the EM algorithm did not converge. Only disparity values associated with green circles are reliable, 
  and the  optimal value of {\tt tol} should consequently be chosen from them.
  
- %14
+ %15
  \begin{minipage}{21cm}
  \begin{Scode}{fig=TRUE,  height=2, width=4}
 par(mfrow=c(1,1), cex=0.65)
@@ -392,7 +407,7 @@ be approximated with Gaussian quadrature (GQ).  For one, two and three mass poin
 The one mass point model is equivalent to the model {\tt faults1} given above, which can also be verified by checking the deviance
 %17
 \begin{Scode}
-faults.g1$Dev
+faults.g1$dev
 \end{Scode}  
 For a Poisson model, deviance and disparity are related by the equation
 $D=Disp +2L_{sat}$
@@ -446,7 +461,7 @@ in each of 34 cities in El Salvador with annual rainfall  {\tt x} in 1000 mm. Th
  The result is approximately the same as that obtained by Aitkin \& Francis (1995). However, note that the disparity
    %23
    \begin{Scode}
- toxo.np$Disparity
+ toxo.np$disparity
  \end{Scode}
  differs from the GLIM 4 result $947.89$. The disparity for binomial models provided by GLIM 4 has to be interpreted as  $-2\log L+c$, where $c$ is some 
  additive constant only depending on the values of {\tt y } and {\tt n}, while the disparity given by this R implementation 
@@ -469,7 +484,7 @@ in each of 34 cities in El Salvador with annual rainfall  {\tt x} in 1000 mm. Th
   %26
   \begin{Scode}
    round(t(toxo.np$post.prob),digits=2)
-   plot(toxo.np, plot.opt=8)
+   plot(toxo.np, plot.opt=3)
  \end{Scode}
  show the allocation of the data to the mass points, indicating that actually only one observation (the 30th) 
  represents the 3rd mass point. From the posteriori probabilites, one also obtains the empirical
@@ -488,7 +503,11 @@ This can alternatively be done easier by using the generic predict function,
 \begin{Scode}
 predict(toxo.np, type="response")
 \end{Scode}
- which calls function {\tt predict.glmmNPML} for an object of type {\tt glmmNPML}. 
+or, even quicker,
+\begin{Scode}
+fitted(toxo.np)
+\end{Scode}
+ which call function {\tt predict.glmmNPML} for an object of type {\tt glmmNPML}. 
  The predict function can also be used to obtain predictions for new input values, e.g. for the linear model:
 %29
  \begin{Scode}
@@ -523,7 +542,7 @@ to have the same dispersion parameter.) For comparison, a three mass point mixtu
  (fitnp3e<-  alldist(duration~age+temp1, data=hosp,k=3, family=Gamma(link=log),tol=0.2,shape=1))
  \end{Scode}
  
- For a more detailed analysis of this data set see Einbeck \& Hinde (2005).
+ For a more detailed analysis of this data set see Einbeck \& Hinde (2006).
  
 One important remark should still be given. When employing the damped EM algorithm, 
 one will very occasionally observe rising disparities, typically from about the 10th to the 30th EM iteration. 
@@ -540,7 +559,7 @@ According to the theory on EM, this shouldn't happen. This phenomenon occurs as
  d_j= 1-(1-\mbox{\tt tol})^{\mbox{\tt damp.power*iter}+1}
  \]
  to a value bigger than one, where {\tt iter} is the number of iterations and $d_j$ is the multiplicative 
- constant adjusting the dispersion parameter (Einbeck \& Hinde, 2005). Another alternative is certainly to switch off damping
+ constant adjusting the dispersion parameter (Einbeck \& Hinde, 2006). Another alternative is certainly to switch off damping
  (option {\tt damp=FALSE)} but then it will not work at all in some cases.
  
  
@@ -587,7 +606,7 @@ According to the theory on EM, this shouldn't happen. This phenomenon occurs as
  \end{Scode}
  Thus, NPML with 8 mass points already leads to a better result than GQ with 20 mass points. 
  The EM trajectories, as shown in Fig. 5, can also be
- obtained explictitely by calling
+ obtained explicitly by calling
  
  %36
  
@@ -685,9 +704,9 @@ Bayesian analysis of mixtures. {\em Statistical Modelling} {\bf
 1}, 287--304.
 \item[AITKIN, M., FRANCIS, B. and HINDE, J. ] (2005). 
 {\em Statistical Modelling in GLIM 4} (2nd edition). Oxford, UK.  
-\item[EINBECK, J. and HINDE, J.] (2005).
+\item[EINBECK, J. and HINDE, J.] (2006).
 A note on NPML estimation for exponential family regression models with unspecified dispersion parameter.
-Technical Report IRL-GLWY-2005-04, National University of Ireland, Galway. 
+{\em Austrian Journal of Statistics} {\bf 35}, 233-243. 
 \item[EFRON, B.] (1986). Double exponential families and their use in generalized linear regression.
 {\em JASA} {\bf 81}, 709--721.
 \item[GOLDSTEIN, H.] (2003). {\em  Multilevel statistical models} (3rd edition). Arnold, London, UK.
@@ -714,22 +733,22 @@ Biostatistics.} Thomson Learning, Duxbury, CA, USA.
 The help files can be found at 
 
 \begin{center}
-{\tt http://www.nuigalway.ie/maths/je/npml/html/00Index.html}
+{\tt http://www.nuigalway.ie/maths/je/npmlreg/html/00Index.html}
 \end{center}
 
-or in the {\bf npmlreg} Manual which can be downloaded in PDF format from
+\noindent or in the {\bf npmlreg} Manual which can be downloaded in PDF format from
 
 \begin{center}
-{\tt http://www.nuigalway.ie/maths/je/npml/} .
+{\tt http://www.nuigalway.ie/maths/je/npml.html} .
 \end{center}
 
-A list of all  functions currently availabe in {\bf npmlreg} is given below:
+A list of all functions currently availabe in {\bf npmlreg} is given below:
 
 %39
 \begin{Scode}
 ls("package:npmlreg")
 \end{Scode}
 
-
+In addition, the data sets \texttt{irlsucide}, \texttt{hosp}, and \texttt{missouri} are available.
 \end{landscape}
 \end{document}

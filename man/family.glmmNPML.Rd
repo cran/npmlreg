@@ -32,16 +32,15 @@ model.matrix.glmmGQ(object, ...)
 %\references{ ~put references to the literature/web site here ~ }
 \author{Jochen Einbeck and John Hinde (2006)}
 \note{
-The generic \R functions \code{update()}, \code{coefficients()}, and \code{coef()}, 
+The generic \R functions \code{update()}, \code{coefficients()},  \code{coef()}, 
+\code{fitted()}, \code{fitted.values()}, and \code{df.residual()}
 can also be applied straightforwardly on all objects of 
 class \code{glmmNPML} or \code{glmmGQ}.  They are not listed above as they use
-the generic default functions  and are not seperately implemented.
+the generic default functions  and are not separately implemented.
 
-The functions \code{df.residual()}, \code{fitted.values()}, 
-\code{fitted()} and \code{residuals()} are also supported, they have indeed to be
-used with care as they give information on the extended GLM in the final EM cycle, 
-rather than on the NPML/GQ estimate. To obtain predicted ('fitted') values of the 
-random effect model, use \code{predict()}. 
+Explicit implementations exist for \code{predict},  \code{summary}, 
+\code{print}, and \code{plot}, and these functions are explained in the corresponding
+help files.   
 }
 \seealso{ \code{\link{summary.glmmNPML}}, \code{\link{predict.glmmNPML}}, 
 \code{\link{family}}, \code{\link{model.matrix}}, \code{\link{update}}, 

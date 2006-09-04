@@ -16,7 +16,7 @@
     \item{\code{sex}}{a factor for gender with levels \code{0} (female) and \code{1} (male).}
     \item{\code{age}}{a factor for age with levels \code{1} (0-29),  \code{2} (30-39), \code{3} (40-59), \code{4} (60+ years).}
     \item{\code{smr}}{a numeric vector with standardized mortality  ratios (SMRs) }
-    \item{\code{expected}}{a numeric vector with `expected' number of cases obtained from a reference population (Ahlborn, 1993).}
+    \item{\code{expected}}{a numeric vector with `expected' number of cases obtained from a reference population (Ahlbom, 1993).}
   }
 }
 \details{
@@ -30,7 +30,7 @@ with regions as upper level.
      from \url{http://mapserver1.cdc-ni.com/iph/index.htm}.
 }
 \references{
-      Ahlborn, A.,  (1993). Biostatistics for Epidemiologists. Boca Raton: Lewis Publishers.
+      Ahlbom, A.,  (1993). Biostatistics for Epidemiologists. Boca Raton: Lewis Publishers.
       
       Sofroniou, N., Einbeck, J., and Hinde, J. (2006). Analyzing Irish Suicide Rates with Mixture Models.
        Proceedings of the 21st Workshop on Statistical Modelling in Galway, Ireland, 2006. 

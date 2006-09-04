@@ -21,8 +21,8 @@ function(x,plot.opt=3, noformat=FALSE,  ...){
   }
   
   if (plot.opt %%4 %in% c(2,3) ){#  EBP vs true values #klappt
-      class.col<-masspoint.classifier(x)
-      plot(x$y[1:length(x$case.weights)], predict(x,type="response"), xlab="true response", ylab="Emp. Bayes Pred." ,col=class.col)
+      class.col<-post(x, level="lower")$classif
+      plot(x$y[1:length(x$weights)], predict(x,type="response"), xlab="true response", ylab="Emp. Bayes Pred." ,col=class.col)
       abline(0,1)         
   }
     

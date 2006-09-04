@@ -40,22 +40,29 @@ whereby \eqn{\eta_{ik}}{eta_ik} are the fitted linear predictors,
   of components \eqn{k} for fixed \eqn{i}. 
 \item the marginal model, if object is of class \code{glmmNPML} and 
 \code{newdata} has been specified. That is, computation is identical as above, but
- with \eqn{w_{ik}}{w_ik} replaced by the masses \eqn{p_k} of the fitted model. 
+ with \eqn{w_{ik}}{w_ik} replaced by the masses \eqn{\pi_k}{pi_k} of the fitted model. 
 \item the analytical expression for the marginal mean of the responses, 
 if object is of class \code{glmmGQ} and \code{newdata} has been specified. 
 See Aitkin et al. (2005), p. 459, for the formula. This method is only
  supported for the logarithmic link function, as otherwise no analytical
   expression for the marginal mean of the responses exists.  
 }
-It is sufficient to write predict instead of \code{predict.glmmNPML} or 
-\code{predict.glmmGQ},
- since the generic predict function provided in R automatically selects the right 
+It is sufficient to write \code{predict} instead of \code{predict.glmmNPML} or 
+\code{predict.glmmGQ}, since the generic predict function provided in \R{} automatically selects the right 
  model class.
 
 }
 \value{
  A vector of predicted values.
-}
+ }
+ 
+ 
+\section{Note}{The results of the generic \code{fitted()} method 
+ correspond to \code{predict(object, type="response")}.  Note that, as we are 
+ working with random effects, fitted values are never really `fitted' but rather 
+ `predicted'.    
+ }
+ 
 \references{
 Aitkin, M. (1996a). A general maximum likelihood analysis of overdispersion in generalized linear models. Statistics and Computing 6, 251-262. 
 
@@ -66,7 +73,7 @@ Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. S
 Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistics 14, 109-121. 
 
  }
-\author{ Jochen Einbeck and John Hinde (2006).}
+\author{Jochen Einbeck and John Hinde (2006).}
 
 \seealso{ 
 \code{\link{alldist}}, \code{\link{allvc}}, \code{\link{predict}}
@@ -87,7 +94,6 @@ Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistic
     # by a  parameter transformation.
 
 # Fabric faults data:
-
     data(fabric, package="gamlss")
     names(fabric) 
     # [1] "leng" "y"    "x"    

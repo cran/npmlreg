@@ -56,7 +56,7 @@ and both plots for \code{plot.opt=3}.
 Aitkin, M. (1996a). A general maximum likelihood analysis of overdispersion in generalized linear models. Statistics and Computing 6, 251-262. 
 
 Einbeck, J., and Hinde, J. (2006). Nonparametric maximum likelihood estimation for random effect models in R. Vignette to R package  \pkg{npmlreg}. 
-Type \code{vignette("npmlreg")} to open it.
+Type \code{vignette("npmlreg-v")} to open it.
 
 Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistics 14, 109-121. 
 }

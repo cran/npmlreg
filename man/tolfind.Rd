@@ -25,7 +25,6 @@ tolfind(formula,
         spike.protect = 1, 
         sdev,
         shape, 
-        vc = FALSE, 
         plot.opt = 1, 
         steps = 15, 
         find.in.range = c(0.05, 0.8), 
@@ -41,16 +40,11 @@ tolfind(formula,
   \item{family}{conditional distribution of responses. "gaussian", "poisson", "binomial", or "Gamma" can be set.}
   \item{data}{the data frame (mandatory, even if it is attached to the workspace!).  }
   \item{k}{the number of mass points/integration points (supported are 
-      up to 21 mass points). }
+      up to 30 mass points). }
     \item{random.distribution}{the mixing distribution, Gaussian Quadrature 
       (\code{gq}) or NPML (\code{np}) can be set.   }    
-  \item{offset}{an optional offset to be included in the model. Note that the 
-    offset cannot be specified in the model formula itself. The value of the 
-    offset is searched in the order of the \R search path, i.e. it checks firstly
-    the global environment and then a possibly attached data frame.  }
-  \item{weights}{optional prior weights for the data. The weights are searched 
-    in the order of the \R search path, i.e. it checks firstly the global 
-    environment and then a possibly attached data frame. }
+  \item{offset}{an optional offset to be included in the model.}
+  \item{weights}{optional prior weights for the data.}
   \item{na.action}{a function indicating what should happen when \code{NA}'s occur,
     with possible arguments \code{na.omit} and \code{na.fail}. The default is 
     set by the \code{na.action} setting in \code{options()} .   }
@@ -64,9 +58,7 @@ tolfind(formula,
     is strongly recommended.  }
   \item{sdev}{optional fixed standard deviation for normal mixture.}
   \item{shape}{optional fixed shape parameter for Gamma mixture.}
-  \item{vc}{has to be set to \code{TRUE} if a variance component model is specified,
-   i.e. when a grid search for \code{tol} in \code{allvc} is desired.  }
-  \item{plot.opt}{For \code{plot.opt=1} the EM trajectories are plotted, 
+   \item{plot.opt}{For \code{plot.opt=1} the EM trajectories are plotted, 
     for \code{plot.opt=2} the development of the disparity \eqn{-2\log L}{-2logL} over 
     iteration number is plotted, for \code{plot.opt=3} both plots are shown, 
     and for \code{plot.opt=0} none of them. }
@@ -87,13 +79,12 @@ The reason  is that NPML has a tendency to get stuck in local maxima,
 as the log-likelihhod function is not concave for fixed \code{k}  (Boehning, 1999).
 
 For Gaussian and Gamma mixtures this R implementation uses by default a damping 
-procedure  in the first cycles of the EM algorithm (Einbeck & Hinde, 2005), 
+procedure  in the first cycles of the EM algorithm (Einbeck & Hinde, 2006), 
 which stabilizes the algorithm and  makes it less sensitive to the optimal choice 
 of \code{tol}.  Application of  \code{tolfind} to check that the optimal  solution has 
 not been overlooked may  nevertheless be advisable. 
 
-\code{tolfind} works for \code{alldist} and \code{allvc}. In the latter case,
-the option \code{vc} has to be set to \code{TRUE}.  The \code{tolfind} function 
+\code{tolfind} works for \code{alldist} and \code{allvc}. The \code{tolfind} function 
 is mainly designed for NPML (\code{random.distribution="np"}). It
 can also be applied to Gaussian Quadrature (\code{random.distribution="gq"}), 
 though \code{tol} is of little importance for this and primarily influences 
@@ -119,7 +110,7 @@ Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. S
 
 Böhning, D. (1999). Computer-Assisted Analysis of Mixtures and Applications. Meta-Analysis, Disease Mapping and others. Chapman & Hall / CRC, Boca Raton, FL, USA.
 
-Einbeck, J. & Hinde, J. (2005). A note on NPML estimation for exponential family regression models with unspecified dispersion parameter. Technical Report IRL-GLWY-2005-04, National University of Ireland, Galway. 
+Einbeck, J. & Hinde, J. (2006). A note on NPML estimation for exponential family regression models with unspecified dispersion parameter. Austrian Journal of Statistics 35, 233-243. 
 }
 
 \author{Jochen Einbeck & John Hinde (2006). 

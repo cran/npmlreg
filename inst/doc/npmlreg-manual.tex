@@ -3,6 +3,7 @@
 \begin{document}
 \Rdcontents{R package \bold{npmlreg} -- Manual}
 
+
 \HeaderA{alldist}{NPML estimation or Gaussian quadrature for overdispersed GLM's and variance component models}{alldist}
 \aliasA{allvc}{alldist}{allvc}
 \keyword{models}{alldist}
@@ -64,21 +65,15 @@ allvc(formula,
 \begin{ldescription}
 \item[\code{formula}] a formula defining the response and the fixed effects (e.g. \code{y \textasciitilde{} x}).
 \item[\code{random}] a formula defining the random model. In the case of \code{alldist},  set \code{random = \textasciitilde{}1} to model overdispersion, and for instance \code{random = \textasciitilde{}x} to introcude a random coeffcient \code{x}.
-In the case of \code{allvc},  set random=~1|PSU to model overdispersion on the upper level, where PSU is a \bold{factor} for the primary sampling units, e.g. groups, clusters, classes, or individuals in longitudinal data, and define random coefficents accordingly.
+In the case of \code{allvc},  set \code{random=\textasciitilde{}1|PSU} to model overdispersion on the upper level, where PSU is a \bold{factor} for the primary sampling units, e.g. groups, clusters, classes, or individuals in longitudinal data, and define random coefficents accordingly.
 \item[\code{family}] conditional distribution of responses. "gaussian", "poisson", "binomial", or "Gamma" can be set. If "gaussian" or "Gamma", then equal component dispersion parameters are assumed, except if the optional parameter lambda is modified.
 \item[\code{data}] the data frame (mandatory, even if it is attached to the workspace!).
 \item[\code{k}] the number of mass points/integration points
-(supported are up to 21 mass points).
+(supported are up to 30 mass points).
 \item[\code{random.distribution}] the mixing distribution, Gaussian Quadrature (\code{gq}) or NPML (\code{np}) can be set.
 \item[\code{tol}] the tol scalar (usually, \eqn{0<}{}\code{tol} \eqn{\le 1}{<= 1})
-\item[\code{offset}] an optional offset to be included in the model. Note that
-the offset cannot be specified in the model formula itself. The value
-of the offset is searched in the order of the \R{} search path,
-i.e. it checks firstly the global environment and then a
-possibly attached data frame.
-\item[\code{weights}] optional prior weights for the data. The weights are searched
-in the order of the \R{} search path, i.e. it checks firstly the
-global environment and then a possibly attached data frame.
+\item[\code{offset}] an optional offset to be included in the model.
+\item[\code{weights}] optional prior weights for the data.
 \item[\code{pluginz}] optional numerical vector of length \code{k} specifying the starting mass points of the EM algorithm.
 \item[\code{na.action}] a function indicating what should happen when \code{NA}'s occur,
 with possible arguments \code{na.omit} and \code{na.fail}. The default is set
@@ -138,7 +133,7 @@ When option \code{'gq'} is set, then Gauss-Hermite masses and mass points are us
 assuming implicitly a normally distributed random effect.
 When option \code{'np'} is chosen, the EM algorithm uses the Gauss-Hermite masses
 and mass points as starting points. The position of the starting points can
-be concentrated or extended by setting tol smaller or larger than one,
+be concentrated or extended by setting \code{tol} smaller or larger than one,
 respectively.
 
 Fitting random coefficient models (Aitkin, Francis \& Hinde, 2005, pp. 474, p. 491) is
@@ -147,34 +142,37 @@ possible by specifying the random term explicitly. Note that the setting
 that only one random coefficient can be specified, and that the option
 \code{random.distribution} is restricted to \code{np} in this case.
 
-The weights have to be understood as frequency weights, i.e. setting all weights in \code{alldist}
-equal to 2 will duplicate each data point and hence double the disparity and deviance.
+The weights have to be understood as frequency weights, i.e. setting all weights in
+\code{alldist} equal to 2 will duplicate each data point and hence double the
+disparity and deviance.
 \end{Details}
 \begin{Value}
 The function alldist produces an object of class \code{glmmNPML}
 (if \code{random.distributon} is set to \code{np})  or \code{glmmGQ}
-(\code{gq}).  Both objects contain 37 components,
-the first 19 of which are simply the output of the glm fitted in the last EM loop.
+(\code{gq}).  Both objects contain the following 29 components:
 
 \begin{ldescription}
 \item[\code{coefficients}] a named vector of coefficients (including the mass points).
-In case of Gaussian quadrature, the coefficient given at 'z'
+In case of Gaussian quadrature, the coefficient given at \code{z}
 corresponds to the standard deviation of the mixing distribution.
-\item[\code{residuals ... converged}] Further 18 components taken directly and in unchanged
-order from the output of the GLM fitted in the last EM loop. Attention:
-The component \code{dev} gives the deviance
-of the glm fitted in the last EM iteration, which is (except for \code{k=1}) not the
-deviance of the fitted random effect model! Analogously, \code{iter} and
-\code{converged} refer to the IWLS procedure in the last EM cycle, and not to EM itself.
+\item[\code{residuals}] the difference between the true response and the emprical Bayes predictions.
+\item[\code{fitted.values}] the empirical Bayes predictions (Aitkin, 1996b) on the scale of the responses.
+\item[\code{family}] the `family' object used.
+\item[\code{linear.predictors}] the extended linear predictors \eqn{\hat{\eta}_{ik}}{eta_ik}.
+\item[\code{disparity}] the disparity (\code{-2logL}) of the fitted mixture regression model.
+\item[\code{deviance}] the deviance of the fitted mixture regression model.
+\item[\code{null.deviance}] The deviance for the null model (just containing an intercept), comparable with
+`deviance'.
+\item[\code{df.residual}] the residual degrees of freedom of the fitted model (including the random part).
+\item[\code{df.null}] the residual degrees of freedom for the null model.
+\item[\code{y}] the (extended) response vector.
 \item[\code{call}] the matched call.
 \item[\code{formula}] the formula supplied.
 \item[\code{random}] the random term of the model formula.
 \item[\code{data}] the data argument.
 \item[\code{model}] the (extended) design matrix.
-\item[\code{case.weights}] the case weights initially supplied.
+\item[\code{weights}] the case weights initially supplied.
 \item[\code{offset}] the offset initially supplied.
-\item[\code{Disparity}] the disparity (\code{-2logL}) of the fitted mixture regression model.
-\item[\code{Deviance}] the deviance of the fitted mixture regression model.
 \item[\code{mass.points}] the fitted mass points.
 \item[\code{masses}] the mixture probabilities corresponding to the mass points.
 \item[\code{sdev}] a list of the two elements \code{sdev\$sdev} and \code{sdev\$sdevk}.
@@ -184,17 +182,20 @@ gives the unequal or smooth component-specific standard deviations.
 All values are equal if \code{lambda=0}.
 \item[\code{shape}] a list of the two elements \code{shape\$shape} and \code{shape\$shapek},
 to be interpreted in analogy to sdev.
-\item[\code{post.prob}] contains a matrix of posteriori probabilities.
-\item[\code{ebp}] contains the Empirical Bayes Predictions (Aitkin, 1996b) on the scale of the linear predictor.
+\item[\code{post.prob}] a matrix of posteriori probabilities.
+\item[\code{post.int}] a vector of `posteriori intercepts' (as in Sofroniou et al. (2006)).
+\item[\code{ebp}] the empirical Bayes Predictions on the scale of the linear predictor.
+For compatibility with older versions.
 \item[\code{EMiter}] gives the number of iterations of the EM algorithm.
 \item[\code{EMconverged}] logical value indicating if the EM algorithm converged.
+\item[\code{lastglm}] the fitted \code{glm} object from the last EM iteration.
 \item[\code{Misc}] contains additional information relevant for the summary and plot functions,
 in particular the disparity trend and the EM trajectories.
 \end{ldescription}
 
 
 If a binomial model is specified by giving a two-column response,
-the weights returned by \code{case.weights} are the total numbers of cases
+the weights returned by \code{weights} are the total numbers of cases
 (factored by the supplied case weights) and the component \code{y}
 of the result is the proportion of successes.
 
@@ -207,7 +208,7 @@ This plot is not produced for GQ.
 \begin{Note}\relax
 In contrast to the GLIM 4 version, this \R{} implementation
 uses for Gaussian and Gamma mixtures by default a damping procedure in the
-first cycles of the EM algorithm (Einbeck \& Hinde, 2005), which stabilizes
+first cycles of the EM algorithm (Einbeck \& Hinde, 2006), which stabilizes
 the algorithm and makes it less sensitive to the optimal
 choice of \code{tol}. If \code{tol} is very small
 (i.e. less than 0.1), it can be useful  to set \code{damp.power} to values
@@ -217,9 +218,8 @@ Using the option \code{pluginz}, one  can to some extent circumvent the
 necessity to  specify \code{tol} by giving the starting points explicitly.
 However, when using \code{pluginz} for normal or gamma-distributed response,
 damping will be strictly necessary to ensure that the imposed starting points
-have some relevance at all (and don't get blurred immediately due to
-initial fluctuations), meaning that  \code{tol} still plays a role
-in this case.
+don't get blurred immediately due to initial fluctuations, implying that
+\code{tol} still plays a role in this case.
 \end{Note}
 \begin{Author}\relax
 Originally translated from the GLIM 4 functions \code{alldist} and
@@ -237,13 +237,13 @@ Aitkin, M. (1999). A general maximum likelihood analysis of variance components 
 
 Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. Second Edition, Oxford Statistical Science Series, Oxford, UK.
 
-Einbeck, J. \& Hinde, J. (2005). A note on NPML estimation for exponential family regression models with unspecified dispersion parameter. Technical Report IRL-GLWY-2005-04, National University of Ireland, Galway.
-
-Sofroniou, N., Einbeck, J., and Hinde, J. (2006). Analyzing Irish suicide rates with mixture models. Proceedings of the 21st Workshop on Statistical Modelling in Galway, Ireland, 2006.
+Einbeck, J. \& Hinde, J. (2006). A note on NPML estimation for exponential family regression models with unspecified dispersion parameter. Austrian Journal of Statistics 35, 233-243.
 
 Goldstein, H. (2003). Multilevel Statistical Models (3rd edition). Arnold, London, UK.
 
 Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistics 14, 109-121.
+
+Sofroniou, N., Einbeck, J., and Hinde, J. (2006). Analyzing Irish suicide rates with mixture models. Proceedings of the 21st International Workshop on Statistical Modelling in Galway, Ireland, 2006.
 \end{References}
 \begin{SeeAlso}\relax
 \code{\LinkA{glm}{glm}}, \code{\LinkA{summary.glmmNPML}{summary.glmmNPML}},
@@ -255,7 +255,7 @@ Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistic
 
 # The first three examples (galaxy data, toxoplasmosis data , fabric faults)
 # are based on GLIM examples in Aitkin et al. (2005), and the forth example using
-# the Hospital-Stay-Data (Rosner, 2000) is taken from Einbeck & Hinde (2005).
+# the Hospital-Stay-Data (Rosner, 2000) is taken from Einbeck & Hinde (2006).
 # The fifth data example using the Oxford boys is again inspired by Aitkin et al. (2005).
 # The sixth example on Irish suicide rates is taken from Sofroniou et al. (2006).
 
@@ -279,7 +279,7 @@ Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistic
   toxo.np3x<- alldist(cbind(Cases,Total-Cases) ~ x, random=~x,
       random.distribution="np", family=binomial(link=logit), data=rainfall, k=3)
   #is the same as
-  toxo.np3x<- alldist(Cases/Total ~ x, random = ~x, weights=rainfall$Total,
+  toxo.np3x<- alldist(Cases/Total ~ x, random = ~x, weights=Total,
       family=binomial(link=logit), data=rainfall, k=3)
   #or
   toxo.np3x<-update(toxo.np3, .~.-x2-x3, random = ~x)
@@ -313,14 +313,14 @@ Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistic
 # Irish suicide data
   data(irlsuicide)
   # Crude rate model:
-  crude<- allvc(death~sex* age, random=~1|ID, offset=log(irlsuicide$pop),
+  crude<- allvc(death~sex* age, random=~1|ID, offset=log(pop),
       k=3, data=irlsuicide, family=poisson)
-  crude$Disparity
+  crude$disparity
   # [1] 654.021
   # Relative risk model:
-  relrisk<- allvc(death~1, random=~1|ID, offset=log(irlsuicide$expected),
+  relrisk<- allvc(death~1, random=~1|ID, offset=log(expected),
       k=3, data=irlsuicide, family=poisson)
-  relrisk$Disparity
+  relrisk$disparity
   # [1] 656.4955
 
 \end{ExampleCode}
@@ -367,7 +367,7 @@ categorical data.  Technometrics, 22, 259-268.
 
 k<-6;
 dkern(1:k,4,k,0.99)
-# Kernel centered at the 4th component with a very small amont of smoothing.
+# Kernel centered at the 4th component with a very small amount of smoothing.
 
 ## The function is currently defined as
 function(x,y,k,lambda){
@@ -400,16 +400,15 @@ model.matrix.glmmGQ(object, ...)
 \end{ldescription}
 \end{Arguments}
 \begin{Note}\relax
-The generic \R{} functions \code{update()}, \code{coefficients()}, and \code{coef()},
+The generic \R{} functions \code{update()}, \code{coefficients()},  \code{coef()},
+\code{fitted()}, \code{fitted.values()}, and \code{df.residual()}
 can also be applied straightforwardly on all objects of
 class \code{glmmNPML} or \code{glmmGQ}.  They are not listed above as they use
-the generic default functions  and are not seperately implemented.
+the generic default functions  and are not separately implemented.
 
-The functions \code{df.residual()}, \code{fitted.values()},
-\code{fitted()} and \code{residuals()} are also supported, they have indeed to be
-used with care as they give information on the extended GLM in the final EM cycle,
-rather than on the NPML/GQ estimate. To obtain predicted ('fitted') values of the
-random effect model, use \code{predict()}.
+Explicit implementations exist for \code{predict},  \code{summary},
+\code{print}, and \code{plot}, and these functions are explained in the corresponding
+help files.
 \end{Note}
 \begin{Author}\relax
 Jochen Einbeck and John Hinde (2006)
@@ -540,7 +539,7 @@ A data frame with 104 observations on the following 8 variables.
 \item[\code{sex}] a factor for gender with levels \code{0} (female) and \code{1} (male).
 \item[\code{age}] a factor for age with levels \code{1} (0-29),  \code{2} (30-39), \code{3} (40-59), \code{4} (60+ years).
 \item[\code{smr}] a numeric vector with standardized mortality  ratios (SMRs)
-\item[\code{expected}] a numeric vector with `expected' number of cases obtained from a reference population (Ahlborn, 1993).
+\item[\code{expected}] a numeric vector with `expected' number of cases obtained from a reference population (Ahlbom, 1993).
 }
 \end{Format}
 \begin{Details}\relax
@@ -553,7 +552,7 @@ Ireland Mortality Database. Retrieved August 8, 2005,
 from \url{http://mapserver1.cdc-ni.com/iph/index.htm}.
 \end{Source}
 \begin{References}\relax
-Ahlborn, A.,  (1993). Biostatistics for Epidemiologists. Boca Raton: Lewis Publishers.
+Ahlbom, A.,  (1993). Biostatistics for Epidemiologists. Boca Raton: Lewis Publishers.
 
 Sofroniou, N., Einbeck, J., and Hinde, J. (2006). Analyzing Irish Suicide Rates with Mixture Models.
 Proceedings of the 21st Workshop on Statistical Modelling in Galway, Ireland, 2006.
@@ -570,38 +569,41 @@ xyplot(irlsuicide$death/irlsuicide$pop~plot2age|irlsuicide$Region,
 \end{ExampleCode}
 \end{Examples}
 
-\HeaderA{masspoint.classifier}{Classify observations to mass points}{masspoint.classifier}
-\keyword{models}{masspoint.classifier}
-\keyword{regression}{masspoint.classifier}
+\HeaderA{missouri}{Missouri lung cancer data}{missouri}
+\keyword{datasets}{missouri}
 \begin{Description}\relax
-Takes an object of class \code{glmmNPML} or \code{glmmGQ} and classifies
-all observations to the mass point with highest posterior probability.
+Lung cancer mortality in the 84 largest Missouri cities, for males aged 45-54, 1972-1981.
+Data presented in Tsutakawa (1985).
 \end{Description}
 \begin{Usage}
-\begin{verbatim}
-masspoint.classifier(object)
-\end{verbatim}
+\begin{verbatim}data(missouri)\end{verbatim}
 \end{Usage}
-\begin{Arguments}
-\begin{ldescription}
-\item[\code{object}] an object of class \code{glmmNPML} or \code{glmmGQ}.
-\end{ldescription}
-\end{Arguments}
-\begin{Value}
-a numerical vector containing the class numbers (the order of the classes corresponds to the
-order of the mass points given in the output of \code{alldist} or \code{allvc}).
-\end{Value}
-\begin{Author}\relax
-Jochen Einbeck and John Hinde (2006)
-\end{Author}
-\begin{SeeAlso}\relax
-\code{\LinkA{alldist}{alldist}}, \code{\LinkA{allvc}{allvc}}
-\end{SeeAlso}
+\begin{Format}\relax
+A data frame with 84 observations on the following 2 variables.
+\describe{
+\item[\code{Size}] population of the city.
+\item[\code{Deaths}] number of lung cancer deaths.
+}
+\end{Format}
+\begin{Details}\relax
+The data set was analyzed using a Poisson model with normal random effect in
+Tsutakawa (1985), and using a binomial logit model with unspecified random effect
+distribution  in Aitkin (1996b). Aitkin fitted this model with GLIM4.
+\end{Details}
+\begin{Source}\relax
+Tsutakawa, R. (1985).
+\end{Source}
+\begin{References}\relax
+Aitkin, M. (1996b). Empirical Bayes shrinkage using posterior random effect means from nonparametric maximum likelihood estimation in general random effect models. Statistical Modelling: Proceedings of the 11th IWSM 1996, 87-94.
+
+Tsutakawa, R. (1985). Estimation of Cancer Mortalilty Rates:
+A Bayesian Analysis of Small Frequencies.  Biometrics 41, 69-79.
+\end{References}
 \begin{Examples}
 \begin{ExampleCode}
- data(galaxies, package="MASS")
- gal<-as.data.frame(galaxies)
- masspoint.classifier(alldist(galaxies/1000~1, random=~1, data=gal, k=5))
+data(missouri)
+alldist(Deaths~1, offset=log(Size), random=~1, k=2,
+   family=poisson(link='log'), data=missouri)
 \end{ExampleCode}
 \end{Examples}
 
@@ -651,8 +653,8 @@ The main functions  are \code{\LinkA{alldist}{alldist}} and \code{\LinkA{allvc}{
 \Tabular{ll}{
 Package: & npmlreg\\
 Type: & Package\\
-Version: & 0.34\\
-Date: & 2006-06-06\\
+Version: & 0.37\\
+Date: & 2006-08-14\\
 License: & GPL version 2 or newer\\
 }
 
@@ -690,7 +692,7 @@ Second Edition, Oxford Statistical Science Series, Oxford, UK.
 
 Einbeck, J., and Hinde, J. (2006). Nonparametric maximum likelihood estimation
 for random effect models in \R. Vignette to \R{} package  \pkg{npmlreg}.
-Type \code{vignette("npmlreg")} to open it.
+Type \code{vignette("npmlreg-v")} to open it.
 \end{References}
 \begin{SeeAlso}\relax
 \code{\LinkA{glm}{glm}}
@@ -761,7 +763,7 @@ Jochen Einbeck and John Hinde (2006)
 Aitkin, M. (1996a). A general maximum likelihood analysis of overdispersion in generalized linear models. Statistics and Computing 6, 251-262.
 
 Einbeck, J., and Hinde, J. (2006). Nonparametric maximum likelihood estimation for random effect models in R. Vignette to R package  \pkg{npmlreg}.
-Type \code{vignette("npmlreg")} to open it.
+Type \code{vignette("npmlreg-v")} to open it.
 
 Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistics 14, 109-121.
 \end{References}
@@ -780,6 +782,61 @@ plot(galaxy.np4u,  plot.opt=4) # plots only EBP vs.  response
 plot(galaxy.np4u,  plot.opt=3) # gives same output as given by default when executing alldist
 plot(galaxy.np4u)              # gives all four plots.
 \end{ExampleCode}
+\end{Examples}
+
+\HeaderA{post}{Posterior probabilities/intercepts, and mass point classifications}{post}
+\keyword{models}{post}
+\keyword{regression}{post}
+\begin{Description}\relax
+Takes an object of class \code{glmmNPML} or \code{glmmGQ} and displays the
+posterior probabilites \eqn{w_{ik}}{w_ik} as well as  the posterior intercepts
+(Sofroniou et. al, 2006). Further it classfies the observations to mass points
+according to their  posterior probability. The level on which the information
+in all three cases is displayed can be chosen by the user via the \code{level}
+argument (\code{"upper"} or \code{"lower"}). The actual information in both cases is
+identical, the latter is just an  expanded version of the former. In case of
+simple overdispersion models, the  \code{level} argument is not relevant.
+\end{Description}
+\begin{Usage}
+\begin{verbatim}
+post(object, level="upper")
+\end{verbatim}
+\end{Usage}
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{object}] an object of class \code{glmmNPML} or \code{glmmGQ}.
+\item[\code{level}] \code{"upper"} or \code{"lower"}.
+\end{ldescription}
+\end{Arguments}
+\begin{Value}
+A list of the following four items:
+
+\begin{ldescription}
+\item[\code{prob}] posterior probabilities (identical to \code{object\$post.prob}
+in case of \code{"lower"} and for one-level models).
+\item[\code{int}] posterior intercepts (identical to \code{object\$post.int}
+in case of \code{"lower"} and for one-level models).
+\item[\code{classif}] a numerical vector containing the class numbers (the order of the classes corresponds to the
+order of the mass points given in the output of \code{alldist} or \code{allvc}).
+\item[\code{level}] either \code{"lower"}, \code{"upper"}, or \code{"none"} (for one-level models).
+\end{ldescription}
+\end{Value}
+\begin{Author}\relax
+Jochen Einbeck and John Hinde (2006)
+\end{Author}
+\begin{References}\relax
+Sofroniou, N., Einbeck, J., and Hinde, J. (2006). Analyzing Irish suicide rates with mixture models. Proceedings of the 21st International Workshop on Statistical Modelling in Galway, Ireland, 2006.
+\end{References}
+\begin{SeeAlso}\relax
+\code{\LinkA{alldist}{alldist}}, \code{\LinkA{allvc}{allvc}}
+\end{SeeAlso}
+\begin{Examples}
+\begin{ExampleCode}
+ data(galaxies, package="MASS")
+ gal <- as.data.frame(galaxies)
+ post(alldist(galaxies/1000~1, random=~1, data=gal, k=5))$classif
+    # classifies the 82 galaxies to one of the five mass points
+ \end{ExampleCode}
 \end{Examples}
 
 \HeaderA{predict.glmmNPML}{Prediction from objects of class glmmNPML or glmmGQ}{predict.glmmNPML}
@@ -826,21 +883,26 @@ to come from component \eqn{k}{} ), and the sum is taken over the number
 of components \eqn{k}{} for fixed \eqn{i}{}.
 \item the marginal model, if object is of class \code{glmmNPML} and
 \code{newdata} has been specified. That is, computation is identical as above, but
-with \eqn{w_{ik}}{w_ik} replaced by the masses \eqn{p_k}{} of the fitted model.
+with \eqn{w_{ik}}{w_ik} replaced by the masses \eqn{\pi_k}{pi_k} of the fitted model.
 \item the analytical expression for the marginal mean of the responses,
 if object is of class \code{glmmGQ} and \code{newdata} has been specified.
 See Aitkin et al. (2005), p. 459, for the formula. This method is only
 supported for the logarithmic link function, as otherwise no analytical
 expression for the marginal mean of the responses exists.
 }
-It is sufficient to write predict instead of \code{predict.glmmNPML} or
-\code{predict.glmmGQ},
-since the generic predict function provided in R automatically selects the right
+It is sufficient to write \code{predict} instead of \code{predict.glmmNPML} or
+\code{predict.glmmGQ}, since the generic predict function provided in \R{} automatically selects the right
 model class.
 \end{Details}
 \begin{Value}
 A vector of predicted values.
 \end{Value}
+\begin{Section}{Note}
+The results of the generic \code{fitted()} method
+correspond to \code{predict(object, type="response")}.  Note that, as we are
+working with random effects, fitted values are never really `fitted' but rather
+`predicted'.
+\end{Section}
 \begin{Author}\relax
 Jochen Einbeck and John Hinde (2006).
 \end{Author}
@@ -873,7 +935,6 @@ Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistic
     # by a  parameter transformation.
 
 # Fabric faults data:
-
     data(fabric, package="gamlss")
     names(fabric)
     # [1] "leng" "y"    "x"
@@ -920,29 +981,23 @@ print.glmmGQ(x, digits=max(3,getOption('digits')-3),  ...)
 \end{Arguments}
 \begin{Details}\relax
 The \code{summary...}- and \code{print...} -functions invoke the generic
-\code{UseMethod(...)} function. Application of \code{summary.glm()}
-on an object created by \code{alldist} is also possible and yields a summary of
-the GLM fitted in the last iteration of the EM algorithm.
-Note again that the deviance given in that summary is not the deviance of
-the NPML estimate! The generic \R{} functions \code{update(), model.matrix(),
-coefficients(), coef()}, and \code{family()}
-can be applied straightforwardly on all objects of class \code{glmmNPML}
-or \code{glmmGQ}. The functions \code{df.residual(), fitted.values(), fitted()}
-and \code{residuals()} are also supported, they have indeed to be used with
-care as they give information on the extended GLM in the final EM cycle,
-rather than on the NPML/GQ estimate. To obtain predicted
-('fitted') values of the random effect model, use \code{predict()}.
+\code{UseMethod(...)} function and pick the summary for the right model class
+automatically.
+
+A summary of the \code{glm} fitted in the last EM iteration is available via
+\code{summary(object)\$lastglmsumm}.
 \end{Details}
 \begin{Value}
 Print or Summary.
 
 Objects returned by \code{summary.glmmNPML}  or  \code{summary.glmmGQ} are identical
-to objects of class \code{glmmNPML} or \code{glmmGQ}, but have an additional component
-\code{\$dispersion} providing the estimated dispersion parameter.
+to objects of class \code{glmmNPML} or \code{glmmGQ}, but have two additional components
+\code{\$dispersion} and \code{\$lastglmsumm} providing the estimated dispersion parameter and a summary
+of the \code{glm} fitted in the last EM iteration.
 \end{Value}
 \begin{Author}\relax
 originally from Ross Darnell (2002), modified and prepared for
-publication by Jochen Einbeck and John Hinde (2006)
+publication by Jochen Einbeck and John Hinde (2006).
 \end{Author}
 \begin{SeeAlso}\relax
 \code{\LinkA{alldist}{alldist}}, \code{\LinkA{allvc}{allvc}}, \code{\LinkA{summary}{summary}},
@@ -976,7 +1031,6 @@ tolfind(formula,
         spike.protect = 1,
         sdev,
         shape,
-        vc = FALSE,
         plot.opt = 1,
         steps = 15,
         find.in.range = c(0.05, 0.8),
@@ -993,16 +1047,11 @@ to model overdispersion.
 \item[\code{family}] conditional distribution of responses. "gaussian", "poisson", "binomial", or "Gamma" can be set.
 \item[\code{data}] the data frame (mandatory, even if it is attached to the workspace!).
 \item[\code{k}] the number of mass points/integration points (supported are
-up to 21 mass points).
+up to 30 mass points).
 \item[\code{random.distribution}] the mixing distribution, Gaussian Quadrature
 (\code{gq}) or NPML (\code{np}) can be set.
-\item[\code{offset}] an optional offset to be included in the model. Note that the
-offset cannot be specified in the model formula itself. The value of the
-offset is searched in the order of the \R{} search path, i.e. it checks firstly
-the global environment and then a possibly attached data frame.
-\item[\code{weights}] optional prior weights for the data. The weights are searched
-in the order of the \R{} search path, i.e. it checks firstly the global
-environment and then a possibly attached data frame.
+\item[\code{offset}] an optional offset to be included in the model.
+\item[\code{weights}] optional prior weights for the data.
 \item[\code{na.action}] a function indicating what should happen when \code{NA}'s occur,
 with possible arguments \code{na.omit} and \code{na.fail}. The default is
 set by the \code{na.action} setting in \code{options()} .
@@ -1016,8 +1065,6 @@ smooth component dispersion parameters, the setting \code{spike.protect=1}
 is strongly recommended.
 \item[\code{sdev}] optional fixed standard deviation for normal mixture.
 \item[\code{shape}] optional fixed shape parameter for Gamma mixture.
-\item[\code{vc}] has to be set to \code{TRUE} if a variance component model is specified,
-i.e. when a grid search for \code{tol} in \code{allvc} is desired.
 \item[\code{plot.opt}] For \code{plot.opt=1} the EM trajectories are plotted,
 for \code{plot.opt=2} the development of the disparity \eqn{-2\log L}{-2logL} over
 iteration number is plotted, for \code{plot.opt=3} both plots are shown,
@@ -1040,13 +1087,12 @@ The reason  is that NPML has a tendency to get stuck in local maxima,
 as the log-likelihhod function is not concave for fixed \code{k}  (Boehning, 1999).
 
 For Gaussian and Gamma mixtures this R implementation uses by default a damping
-procedure  in the first cycles of the EM algorithm (Einbeck \& Hinde, 2005),
+procedure  in the first cycles of the EM algorithm (Einbeck \& Hinde, 2006),
 which stabilizes the algorithm and  makes it less sensitive to the optimal choice
 of \code{tol}.  Application of  \code{tolfind} to check that the optimal  solution has
 not been overlooked may  nevertheless be advisable.
 
-\code{tolfind} works for \code{alldist} and \code{allvc}. In the latter case,
-the option \code{vc} has to be set to \code{TRUE}.  The \code{tolfind} function
+\code{tolfind} works for \code{alldist} and \code{allvc}. The \code{tolfind} function
 is mainly designed for NPML (\code{random.distribution="np"}). It
 can also be applied to Gaussian Quadrature (\code{random.distribution="gq"}),
 though \code{tol} is of little importance for this and primarily influences
@@ -1074,7 +1120,7 @@ Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. S
 
 Böhning, D. (1999). Computer-Assisted Analysis of Mixtures and Applications. Meta-Analysis, Disease Mapping and others. Chapman \& Hall / CRC, Boca Raton, FL, USA.
 
-Einbeck, J. \& Hinde, J. (2005). A note on NPML estimation for exponential family regression models with unspecified dispersion parameter. Technical Report IRL-GLWY-2005-04, National University of Ireland, Galway.
+Einbeck, J. \& Hinde, J. (2006). A note on NPML estimation for exponential family regression models with unspecified dispersion parameter. Austrian Journal of Statistics 35, 233-243.
 \end{References}
 \begin{SeeAlso}\relax
 \code{\LinkA{alldist}{alldist}}, \code{\LinkA{allvc}{allvc}}

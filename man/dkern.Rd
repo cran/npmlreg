@@ -47,7 +47,7 @@ This kernel was introduced in Aitkinson & Aitken (1976); see also Titterington (
 
 k<-6; 
 dkern(1:k,4,k,0.99)   
-# Kernel centered at the 4th component with a very small amont of smoothing.
+# Kernel centered at the 4th component with a very small amount of smoothing.
 
 
 ## The function is currently defined as

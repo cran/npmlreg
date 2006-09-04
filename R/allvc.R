@@ -22,15 +22,8 @@ function(formula,
                     verbose=TRUE,
                     ...)
 {
-  # Fits variance component models with Gaussian Quadrature (Hinde, 1982)
-  # or Nonparametric Maximum Likelihood (Aitkin, 1999), implemented
-  # in analogy to the corresponding GLIM4 function from Brian
-  # Francis/ Murray Aitkin.
-  #
-  # R code originally by Ross Darnell (2002), modifications and extensions
-  # by Jochen Einbeck / John Hinde (2005).
-  #
-  # Documentation at www.nuigalway.ie/maths/je/npml.html
+  # R function allvc in package npmlreg.  NPML/GQ for variance component models.
+  # Type  ?npmlreg for licence, copyright, and version information.
 
   call <- match.call()
   if (is.character(family))
@@ -42,56 +35,82 @@ function(formula,
     stop("`family' not recognized")
   }
   
-  ddim<-dim(data)
-  if (!missing(offset) && length(offset) != ddim[1]) {
-       stop("Number of offsets is ", length(offset), ", should equal ", ddim[1], " (number of observations)")
-     }
-  if (!missing(weights) && length(weights) != ddim[1]){
-       stop("Number of weights is ", length(weights), ", should equal ", ddim[1], " (number of observations)")
-     } 
+  data  <-as.data.frame(data)
+  ddim  <-dim(data)
+  mf    <- match.call(expand.dots = FALSE)
   
+  #  Test for inadmissibly removed intercept term
+  if (k>1 && random.distribution=='np' && max(length(grep('- 1', deparse(formula(mf)))),length(grep('-1', deparse(formula(mf))))) >0 ){
+      stop(" term '-1'  in model formula not supported for k>1 & random.distribution='np'. ")
+  }
+   
+  # Test for incorrect offset specification in formula object
+  testoffset<-try(is.null(attr(terms(formula(mf)),"offset")),silent=TRUE)
+  if (!(class(testoffset)=="try-error" || testoffset)){
+      stop("Please specify offset as separate argument outside the model formula.")
+  }
   
-  mf <- match.call(expand.dots = FALSE)
-  m <- match(c("formula", "data", "subset", "weights", "na.action",
+  # Extract variables from call and set up initial (fixed effect) model
+  m    <- match(c("formula", "data", "subset", "weights", "na.action", 
                "etastart", "mustart", "offset"), names(mf), 0)
-  mf <- mf[c(1, m)]
+  mf   <- mf[c(1, m)]
   mf$drop.unused.levels <- TRUE
   mf[[1]] <- as.name("model.frame")
+  mf <- try(eval(mf,  parent.frame()), silent=TRUE)
+  if (class(mf)=="try-error"){
+      if (!missing(offset) && length(offset) != ddim[1]) {
+      stop("Number of offsets is ", length(offset), ", should equal ", ddim[1], " (number of observations)")
+      }
+      if (!missing(weights) && length(weights) != ddim[1]){
+      stop("Number of weights is ", length(weights), ", should equal ", ddim[1], " (number of observations)")
+      }
+      stop(geterrmessage())
+  }
+  offset  <- model.offset(mf) 
+  weights <- model.weights(mf)
+  X  <- Y <- XZ <- NULL
+  Y  <- model.response(mf, "numeric") # response
+  Ym <- is.matrix(Y)
+  N  <- NROW(Y)  # corresponds to ddim[1] if there are no missing values
   
-  mf <- eval(mf, parent.frame())
-  X <- Y <- XZ <- NULL
-  Y <- model.response(mf, "numeric") # response
-  Ym <-is.matrix(Y) 
-  N <- NROW(Y)
-
-  if (missing(offset)){ offset<-rep(0,ddim[1])}
-  data$offset<-offset
-  if (missing(weights)){weights<-rep(1,ddim[1])}
-  data$pweights<-weights
-   
-  data<- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] #exclude missing values
- 
+  # Set up weights and offset  for initial glm
+  if (is.null(offset)){offset<-rep(0,N) }
+  if (is.null(weights)){weights<-rep(1,N)}   
+  data$offset <- numeric(1); data$pweights<-numeric(1)  
+  data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] #omit missing values   
+  data$offset <- offset;  data$pweights <- weights
+  
+  # Extract variable names from random part 
+  rform    <- random
+  mform    <-  strsplit(as.character(random)[2],'\\|')[[1]]
+  mform    <- gsub(' ', '',mform)
+  if (length(mform)==1){stop("Please use function alldist for overdispersion models")} 
+  mform1   <- mform[1]
+  mform2   <- mform[2]
+  if(!(mform2 %in% names(data))){stop("The specified clustering variable is not contained in the data frame.")}  
+  rlevels  <- factor(data[,mform2])  #11-08-06
+  group    <- factor(levels(rlevels))#20-04-06 
+  
   # initial fit and simple glm for k=1
   fit    <- glm(formula, family=family, weights=pweights, offset=offset, data=data,...)
   names0 <- dimnames(data)[[1]] 
-  w0     <- fit$prior.weights  #store prior weights for output
-  off0   <- fit$offset; names(off0)<-names0   #store offset for output
+  w0     <- fit$prior.weights  # store prior weights for output
+  off0   <- fit$offset; names(off0)<-names0   # store offset for output
   Y      <- fit$y  
   l0     <- length(fit$coef)  
+  tol0   <- tol # for main title of graphical output 
   
+  # For binomial models, check weights: case weights, or number of trials?
   if(family$family=="binomial"){
       data$pweights<- data$pweights^Ym
       YP<- binomial.expand(Y,1,w0/data$pweights); 
       Y<- YP[[1]]; PY<-YP[[2]];r<-YP[[3]]; n<-YP[[4]]
   } 
-           
-  #w<-data$pweights # removed with version 0.32
-  
+    
+  # Initial estimates of  standard deviation and/or shape parameter  (response distr.)     
   sdev.miss  <- missing(sdev)
-  shape.miss <-missing(shape)
- 
+  shape.miss <- missing(shape)
   if (family$family=="gaussian"){
-        #sdev <- ifelse(sdev.miss, sqrt(sum(w*(Y-fitted(fit))^2)/(sum(w)-l0)), sdev)  # identical to:
         sdev  <-  ifelse(sdev.miss, sqrt(summary(fit)$dispersion), sdev)
         shape <- 0
   } else if (family$family =="Gamma") {
@@ -101,14 +120,13 @@ function(formula,
                         "inverse"= sum(data$pweights*(1/Y-1/(fitted(fit)))^2)/(sum(data$pweights)),
                         "identity"= sum(data$pweights*(Y-fitted(fit))^2)/(sum(data$pweights)),
                         )), sdev) 
-        #shape <- ifelse(shape.miss,(sum(w)-l0)/sum(w*((Y-fitted(fit))/fitted(fit))^2), shape)#ident. to:
         shape <- ifelse(shape.miss,1/summary(fit)$dispersion, shape)
   } else {
         sdev  <- 1
         shape <- 0
   } 
    
-       
+  # Initial disparity (-2logL)    
   ML.dev0 <- -2*sum(data$pweights*switch(family$family,
              "gaussian"= dnorm(fit$y, fitted(fit), sdev, log=TRUE),
              "poisson" = dpois(fit$y, fitted(fit), log=TRUE),
@@ -116,64 +134,58 @@ function(formula,
              "Gamma"   = dgamma(fit$y, shape=shape, scale=fitted(fit)/shape, log=TRUE),             
             ))
 
+  # Return (glm) output and terminate if k=1
   if (k == 1){
-                                 
-      # Calculate updated weights and loglikehood
-      fit <- c( fit[1:19],
-              call=call,
-              formula=formula,
-              random="none",
-              data= list(data[,1:ddim[2]]),
-              model=list(model.matrix(fit)),
-              case.weights=list(w0),
-              offset=list(off0),
-              Disparity=ML.dev0,
-              Deviance=fit$dev,
-              mass.points=list(fit$coef[1]),
-              masses=1,
-              sdev=list(list(sdev=sdev, sdevk=sdev)),
-              shape=list(list(shape=shape,shapek=shape)),
-              post.prob=list(matrix(1,N,1,dimnames=list(names0,"") )),
-              ebp="none",
-              EMiter= 0,
-              EMconverged="none",
-              Misc=list(list(lambda=lambda)),
+      names(fit$coefficients)<-ifelse(names(fit$coefficients)=="(Intercept)", "MASS1", names(fit$coefficients))
+      post.prob <-  matrix(1,N,1,dimnames=list(names0,"") )
+      
+      fit <- c( fit[c(1,2,3,8,9)],
+              disparity = ML.dev0,
+              deviance = fit$dev,
+              fit[c(12,16,17,18)],
+              call = call,  
+              formula = formula,
+              random = "none",
+              data = list(subset(data,select=1:ddim[2])),
+              model = list(model.matrix(fit)),
+              weights = list(w0),
+              offset = list(off0),
+              mass.points = list(fit$coef[1]),
+              masses = 1,
+              sdev = list(list(sdev=sdev, sdevk=sdev)),
+              shape = list(list(shape=shape,shapek=shape)),
+              post.prob = list(post.prob),
+              post.int =  list(fit$coef[1]),
+              ebp = list(family$linkfun(fit$fitted)),
+              EMiter = 0,
+              EMconverged = "none",
+              lastglm = list(fit),
+              Misc = list(list(lambda=lambda)),
               )
       class(fit)<-'glmmNPML'
       return(fit)
-  } else if (!(k %in% 1:21)){
+  } else if (!(k %in% 1:30)){
       stop("This choice of k is not supported.")
   }
 
-  # Expand the response
+  # Expand the data
   if(family$family=="binomial"){
-          YP<- binomial.expand(Y,k,rep(1,N)); Y<- YP[[1]]; PY<-YP[[2]];r<-YP[[3]]; n<-YP[[4]]
-  }  else Y <- rep(Y,k)
+      YP   <- binomial.expand(Y,k,rep(1,N)); Y<- YP[[1]]; PY<-YP[[2]];r<-YP[[3]]; n<-YP[[4]]
+  }  else  {
+      Y    <- rep(Y,k)
+  }
+  X        <- expand.vc(X,k)# expand design matrix
+  datak    <- expand.vc(data,k)
+  kindex   <- rep(1:k,rep(N,k))# index for the mixtures
+  tmp      <- gqz(k,minweight=1e-21)  #from version 0.32-2
+  z0       <- -tmp$l
+  z        <- rep(-tmp$l,rep(N,k))
+  p        <- tmp$w
+  group    <- factor(levels(factor(datak[,mform2])))# 20/04/06 
+  offset   <- datak$offset    # expand offset
+  pweights <- datak$pweights  # expand weights
 
-  X       <- expand.vc(X,k)# expand design matrix
-  datak   <- expand.vc(data,k)# expand data.
-  kindex  <- rep(1:k,rep(N,k))# index for the mixtures
-  #tmp    <- hermite(k)# grab weights and abscissas
-  tmp     <- gqz(k,minweight=1e-14)  #from version 0.32-2
-  #z0     <- tmp$z
-  z0      <- -tmp$l
-  #z      <- rep(tmp$z,rep(N,k))
-  z       <- rep(-tmp$l,rep(N,k))
-  p       <- tmp$w
-  rform   <- random
-  
-  # Generate the design matrix for the random effects
-  mform <-  strsplit(as.character(random)[2],'\\|')[[1]]
-  mform <- gsub(' ', '',mform)
-  if (length(mform)==1){stop("Please use function alldist for overdispersion models")} 
-  mform1   <- mform[1]
-  mform2   <- mform[2]
-  
-  #group    <- factor(levels(as.factor(datak[,mform2])))##R.E.D. 15/2/06
-  group    <- factor(levels(factor(datak[,mform2])))## 20/04/06  
-  offset   <- datak$offset    #expand offset
-  pweights <- datak$pweights  #expand weights
-
+  # Generate the random design matrix and append to fixed matrix
   if (random.distribution=='np'){  # Nonparametric random effect
       X <- model.matrix(formula,datak)[,-1,drop=FALSE]
       datak$MASS <- gl(k,N)
@@ -189,21 +201,25 @@ function(formula,
       if (mform1=='1') random <- formula('~ z - 1') else
       random <- formula(paste('~',paste(mform1,'z - 1',sep=':'),sep='')) ##R.E.D. 13/2/06
   }
-  
   Z <- model.matrix(random,datak)
   if (dim(X)[1]!= dim(Z)[1]){cat("The missing value routine cannot cope with this model. Please specify the random term also as fixed term and try again. ")}
   XZ <- cbind(X,Z)
-  nr <- nlevels(group)
-  ijindex <- rep(1:N,k)
-  groupij <- factor(data[,mform2]) # 20/04/06
-  groupijk <- rep(groupij,k)
+  
+  # Set up indices for hierarchical model
+  nr        <- nlevels(group)
+  ijindex   <- rep(1:N,k)
+  groupij   <- factor(data[,mform2]) # 20/04/06
+  groupijk  <- rep(groupij,k)
   Intercept <- names(fit$effects)[1]=='(Intercept)'
-  nf <- length(names(fit$effects))
+  nf        <- length(names(fit$effects))
 
   # Extend linear predictor
   if (missing(pluginz)){sz<-tol* sdev*z} else {sz<-rep(pluginz-fit$coef[[1]],rep(N,k))}
   Eta<-fit$linear.predictor + sz
+        # The extra term stops unrelated regressions
   
+  
+  # Initial EM trajectory values 
   if (random.distribution=="np"){
       tol<- max(min(tol,1),1-damp)
       if(length(fit$coef)==1){
@@ -215,8 +231,8 @@ function(formula,
       followmass<-NULL; tol<-1
   }
 
-  # The extra term stops unrelated regressions
-  Mu <- family$linkinv(Eta) # expanded fitted values
+  # Expanded fitted values
+  Mu <- family$linkinv(Eta) 
 
   # Calculate loglikelihood for fixed model
   f <- switch(family$family,
@@ -225,10 +241,8 @@ function(formula,
               "binomial"=dbinom(r,n,Mu,log=TRUE),
                "Gamma"=dgamma(Y,shape=shape/tol^2,scale=Mu*tol^2/shape ,log=TRUE),
                )
-  #f<-ifelse(f>-740,f,-740) #avoid zero weights
-
-  # Calculate the individual by mixture weights from initial model
-
+  
+  # Calculate the weights from initial model
   groupk <- interaction(groupijk,factor(kindex))
   mik    <- matrix(tapply(f*pweights,groupk,sum),nrow=nr,ncol=k)  #16-03-06
   tmp    <- weightslogl.calc.w(p,mik,rep(1,nr))   #16-03-06
@@ -244,19 +258,23 @@ function(formula,
   while (iter <= EMmaxit && (!converged || (iter<=9 && random.distribution=='np' && damp && (family$family=="gaussian" && sdev.miss || family$family=="Gamma"&& shape.miss)  ))){   
       if (verbose){cat(iter,'..')}
 
+      # M-Step: Weighted GLM
       fit <- try(glm.fit(x=XZ, y=Y, weights = as.vector(w)*pweights, family = family, offset=offset,...))                                
       if (class(fit)=="try-error"){
-                stop("Singularity or Likelihood-Spike at iteration #", iter,  ". Enable spike protection or smooth among components.")
+                stop("Singularity or Likelihood-Spike at iteration #", iter,  ". 
+                Check model specification, enable spike protection or smooth among components.")
       }
-            
-      if (random.distribution=="np"){ #EM Trajectories
+      
+      # EM Trajectories      
+      if (random.distribution=="np"){ 
           masspoint<- fit$coef[l0:(l0+k-1)]
           followmass<-rbind(followmass, masspoint)
       }
 
+      # Fitted response from current model
       Mu <- fitted(fit)
       
-      #Unequal component dispersion parameters  
+      # Unequal component dispersion parameters  
       if (family$family=="gaussian"){
           if (sdev.miss){ sdev<- sqrt(sum((as.vector(w)*pweights)*(Y-Mu)^2)/sum(as.vector(w)*pweights))}
           sdevk<-rep(sdev,k) 
@@ -269,9 +287,9 @@ function(formula,
           } else {
               sk<-sdev
           }
-      }  else {sdevk <-rep(NA,k)}
-      
-
+      }  else {
+          sdevk <-rep(NA,k)
+      }
       if (family$family=="Gamma"){
            if (shape.miss) { shape<-(sum(as.vector(w)*pweights))*1/sum(as.vector(w)*pweights*((Y-fitted(fit))/fitted(fit))^2)}
            shapek<-rep(shape,k) 
@@ -284,125 +302,128 @@ function(formula,
            } else {
                 shk<-shape
            }
-       } else {shapek<-rep(NA,k)}
+       } else {
+           shapek<-rep(NA,k)
+       }
 
       
       # Calculate loglikelihood for expanded model for this iteration
-
       f <- switch(family$family,
               "gaussian"=dnorm(Y,Mu,(1-(1-tol)^(damp.power*iter+1))*sk,log=TRUE),
               "poisson" =dpois(Y,Mu,log=TRUE),
               "binomial"=dbinom(r,n,Mu,log=TRUE),
                "Gamma"=dgamma(Y,shape=shk/(1-(1-tol)^(damp.power*iter+1))^2,scale=Mu*(1-(1-tol)^(damp.power*iter+1))^2/shk,log=TRUE),
            )
-           
-      #f   <- ifelse(f>-740,f,-740)  #22-03-06
-      #mik <- matrix(tapply(f,groupk,sum),nrow=nr,ncol=k)
+      
+      # E-Step: Update weights     
       mik  <- matrix(tapply(f*pweights,groupk,sum),nrow=nr,ncol=k) #16-3-06
       tmp  <- weightslogl.calc.w(p,mik, rep(1,nr))   #16-03-06
       w    <- tmp$w[match(groupij,group),]
-      if (random.distribution=='np'){ #Update masses from posterior probabilities
-            p <- as.vector(apply(tmp$w,2,mean))
+      
+      # Calculate the component proportions from the weights
+      if (random.distribution=='np'){ 
+          p <- as.vector(apply(tmp$w,2,mean)) # differs from alldist - no weights needed on upper level! 
       }
       
+      # Update disparity and check for convergence
       ML.dev[iter+1] <- ifelse(is.na(tmp$ML.dev), Inf, tmp$ML.dev)
-      #ML.dev[iter+1] <- tmp$ML.dev # -2 * log L max
       if (ML.dev[iter+1]>ML.dev0) {ml<-ml+1}
       converged <- abs(ML.dev[iter+1] - ML.dev[iter])< EMdev.change
       iter <- iter + 1
   
+      # Check for likelihood spikes
       if (random.distribution != 'gq' && spike.protect!=0){
           if (family$family=='gaussian' && abs(min(sdevk/(fit$coef[(length(fit$coef)-k+1):length(fit$coef)]))) <0.000001*spike.protect){break}  #Avoid Likelihhod Spikes
           if (family$family=='Gamma' && abs(max(shapek/(fit$coef[(length(fit$coef)-k+1):length(fit$coef)])))> 10^6*spike.protect){break}
       }  
   
-  
-  }########################### End of EM loop #############
+   }########################### End of EM loop #############
 
-    
+  # Print on screen information on EM convergence  
   if (verbose){cat("\n")
-  if (converged){
-      cat("EM algorithm met convergence criteria at iteration # ", iter-1,"\n")} else{
-      cat("EM algorithm failed to meet convergence criteria at iteration # ", iter-1,"\n")}
+      if (converged){
+        cat("EM algorithm met convergence criteria at iteration # ", iter-1,"\n")
+      } else{
+        cat("EM algorithm failed to meet convergence criteria at iteration # ", iter-1,"\n")
+      }
   }
+  
+  # Compute model deviance
   Deviance<- switch(family$family,
               "gaussian"= sdev^2*ML.dev[iter]-sdev^2* sum(data$pweights[1:N] * log(2*pi*sdev^2)),
-              "poisson" =ML.dev[iter] +2*sum(data$pweights[1:N]*(-Y[1:N]+Y[1:N]*log(Y[1:N])-lfactorial(Y[1:N]))),
+              "poisson" =ML.dev[iter] +2*sum(data$pweights[1:N]*(-Y[1:N]+Y[1:N]*log(Y[1:N]+(Y[1:N]==0))-lfactorial(Y[1:N]))),
               "binomial"=ML.dev[iter] +2*sum(data$pweights[1:N]*(lfactorial(n)-lfactorial(r)-lfactorial(n-r) - n*log(n) + r*log(r+(r==0))+(n-r)*log(n-r+((n-r)==0)))[1:N]),
               "Gamma"=1/shape*ML.dev[iter]+2/shape*(sum(data$pweights[1:N])*shape*(log(shape)-1)-sum(data$pweights[1:N])*lgamma(shape)-sum(data$pweights[1:N]*log(Y[1:N]))),            
               )
-                           
-  mass.points <- masses<-NULL
-  np<-length(fit$coef)
-  ebp<-apply(w*matrix(fit$linear.predictor,N,k,byrow=FALSE),1,sum)
-  names(ebp)<-names0
-   
-  m <- seq(1,np)[substr(attr(fit$coefficients, 'names'),1,4)=='MASS']
-  mass.points <- fit$coefficients[m]
-  if (is.na(fit$coefficients[np])){length(fit$coefficients)<-np-1}# if one variable is random *and* fixed
   
-  if ((plot.opt==1 || plot.opt==2) && par("mfrow")[1]>2) { #Write tol values as plot title if alldist is called from tolfind:
-           plot.main <- substitute("tol"== tol, list(tol=tol))
+  # Compute  posterior prob. etc.                          
+  mass.points   <- masses<-NULL
+  np            <- length(fit$coef)
+  ebp           <- apply(w*matrix(fit$linear.predictor,N,k,byrow=FALSE),1,sum)
+  ebp.fitted    <- family$linkinv(ebp)
+  ebp.residuals <- Y[1:N]- ebp.fitted
+  names(ebp)    <- names(ebp.fitted) <- names(ebp.residuals) <- names0
+  if (is.na(fit$coefficients[np])){length(fit$coefficients)<-np<-np-1}# if one variable is random *and* fixed
+  m <- seq(1,np)[substr(attr(fit$coefficients, 'names'),1,4)=='MASS']
+  if (random.distribution=="np"){
+      mass.points   <- fit$coefficients[m]
+  } else {  
+      a <- ifelse(names(fit$coef[1])== "(Intercept)", fit$coef[1], 0) #02-08-06
+      mass.points <- a + fit$coef[np]*z0
+  }
+  post.prob     <- matrix(w, nrow=N, byrow=FALSE, dimnames=list(names0, 1:k) )
+  post.int      <- as.vector(post.prob %*% mass.points[1:k]); names(post.int)<-names0
+    
+  # Write tol values as plot title if alldist is called from tolfind:
+  if ((plot.opt==1 || plot.opt==2) && par("mfrow")[1]>2) { # Write tol values as plot title if alldist is called from tolfind:
+           plot.main <- substitute("tol"== tol0, list(tol0=tol0))
       } else {
            plot.main <- c("")
   }
    
+  # Set up graphics device and plot disparity trend 
   if (plot.opt==3 && random.distribution=="np"){
-      par(mfrow=c(2,1),cex=0.5,cex.axis=1.5,cex.lab=1.5)
+      par(mfrow=c(2,1), cex=0.5, cex.axis=1.5, cex.lab=1.5)
   }
-
   if (plot.opt==1|| plot.opt==3){
       if  ((family$family=="gaussian" && sdev.miss|| family$family=="Gamma" && shape.miss) && damp && random.distribution=='np' && iter>=max(8,ml+1)){
-          #Linear interpolation for initial cycles
+          # Linear interpolation for initial cycles
           ML.dev[2: max(7,ml)]<-ML.dev0+ 1:max(6,ml-1)/ max(7,ml)*(ML.dev[max(8,ml+1)]-ML.dev0) 
       }  
       plot(0:(iter-1),ML.dev, col=1,type="l",xlab='EM iterations',ylab='-2logL', main= plot.main )
       if (verbose){ cat("Disparity trend plotted.\n")}
   }
 
+  # Prepare output for glmmNPML objects
   if (random.distribution=="np") {
 
-      masses <- as.vector(apply(tmp$w,2,mean))   
+      # Mixture proportions
+      masses <- as.vector(apply(tmp$w,2,mean)) # differs from alldist - no weights needed on upper level! 
       names(masses) <- paste('MASS',1:k,sep='')
       
-      #Plot EM trajectories
+      # Compute fixed part residuals
       if (family$family=="binomial"){
-          R0<- switch(family$link, "log"= log(PY[1:N]),
-                                          log(PY[1:N]/(1-PY[1:N])))
-          if(dim(X)[2]>0){R<-R0 -X[1:N,]%*%matrix(fit$coef[1:dim(X)[2]])-offset[1:N]}
-          else {R<- R0-offset[1:N]}
+          R0 <- family$linkfun(PY[1:N])
+      } else  {
+          R0 <- family$linkfun(Y[1:N])
       }
-      else if (family$family=="poisson") {
-          R0<- switch(family$link, "log"= log(Y[1:N]),
-                                   "sqrt"=sqrt(Y[1:N]),
-                                   "identity"=Y[1:N])
-          if(dim(X)[2]>0){R<-R0 -X[1:N,]%*%matrix(fit$coef[1:dim(X)[2]])-offset[1:N]}
-          else {R<-R0-offset[1:N]}
-      } else if (family$family=="Gamma") {
-          R0<- switch(family$link, "log"= log(Y[1:N]),
-                                   "inverse"=1/Y[1:N],
-                                   "identity"=Y[1:N] )
-          if(dim(X)[2]>0){ R<-R0 - X[1:N,]%*%matrix(fit$coef[1:dim(X)[2]])-offset[1:N]}
-          else {R<- R0 -offset[1:N]}
-      } else {   R0<- switch(family$link,  "log"= log(Y[1:N]),
-                                           "inverse"=1/Y[1:N],
-                                           "identity"=Y[1:N])
-          if(dim(X)[2]>0){R<-R0 -X[1:N,]%*%matrix(fit$coef[1:dim(X)[2]])-offset[1:N]}
-          else {R<-R0-offset[1:N]}
+      if(dim(X)[2]>0){
+        R <-R0 - X[1:N,]%*%matrix(fit$coef[1:dim(X)[2]])-offset[1:N]
+      } else {
+        R <- R0 - offset[1:N]
       }
-      R<-as.vector(R);  names(R)<-names0   
+      R <- as.vector(R);  names(R) <- names0   
          
-      if ( mform1=='1'){ 
-          ylim<- c(min(na.omit(R)),max(na.omit(R)))
-          if (ylim[1]==-Inf){ylim[1]<-min(followmass[,])} ;if (ylim[2]==Inf){ylim[2]<-max(followmass[,])}
+      # EM trajectory plot
+      if ( mform1=='1' && all(is.finite(R))){ 
+           ylim <- c(min(R), max(R))  #29/06/2006
       } else  { 
-          ylim<-c(min(followmass[,]),max(followmass[,]))
+          ylim <- c(min(followmass[,]),max(followmass[,]))
       }
       if(any(is.na(ylim)) &  plot.opt >1 ){
               cat("Singularity: EM Trajectory plot not available.", "\n");
               plot.opt<-min(plot.opt,1)
       }
-      
       if (plot.opt==2|| plot.opt==3){
             plot(0:(iter-1),followmass[,1],col=1,type='l',ylim=ylim,ylab='mass points',xlab='EM iterations', main= plot.main )
             for (i in 1:k){ lines(0:(iter-1), followmass[,i],col=i)
@@ -410,49 +431,67 @@ function(formula,
             if (verbose){cat("EM Trajectories plotted.\n")}
       }
 
-
-      fit <- c( fit[1:19],
-                call=call,
-                formula=formula,
-                random=rform,
-                data= list(data[,1:ddim[2]]),
-                model=list(XZ),
-                case.weights=list(w0),
-                offset=list(off0),
-                Disparity=ML.dev[iter],
-                Deviance=Deviance,
-                mass.points=list(mass.points),
-                masses=list(masses),
-                sdev=list(list(sdev=sdev, sdevk=sdevk)),
-                shape=list(list(shape=shape,shapek=shapek)),
-                post.prob=list(matrix(w, nrow=N, byrow=FALSE, dimnames=list(names0, 1:k) )),
-                ebp=list(ebp),
-                EMiter= iter - 1,
-                EMconverged=converged,
-                Misc=list(list(Disparity.trend=ML.dev,EMTrajectories=followmass, res=R,ylim=ylim,lambda=lambda,mform=mform1))
+      # glmmNPML output 
+      fit <- c( fit[1],
+                residuals = list(ebp.residuals),
+                fitted.values = list(ebp.fitted),
+                fit[c(8,9)],
+                disparity = ML.dev[iter],
+                deviance = Deviance,
+                fit[12],  
+                df.residual = N-np-k+1,
+                df.null = N-1,
+                fit[18],
+                call = call,
+                formula = formula,
+                random = rform,
+                data = list(subset(data,select=1:ddim[2])),
+                model = list(XZ),
+                weights = list(w0),
+                offset = list(off0),
+                mass.points = list(mass.points),
+                masses = list(masses),               
+                sdev = list(list(sdev=sdev, sdevk=sdevk)),
+                shape = list(list(shape=shape,shapek=shapek)),
+                post.prob = list(post.prob),
+                post.int =  list(post.int),
+                ebp = list(ebp),
+                EMiter = iter - 1,
+                EMconverged = converged,
+                lastglm = list(fit),
+                Misc=list(list(Disparity.trend=ML.dev,EMTrajectories=followmass, res=R,ylim=ylim,lambda=lambda,mform=mform1, mform2=mform2, group=group))
                 )
       class(fit) <-'glmmNPML'
   } else {
-      mass.points<-fit$coef[1]+fit$coef[np]*z0
-      fit <- c( fit[1:19],
-                call=call,
-                formula=formula,
-                random=rform,
-                data= list(data[,1:ddim[2]]),
-                model=list(XZ),
-                case.weights=list(w0),
-                offset=list(off0),
-                Disparity=ML.dev[iter],
-                Deviance=Deviance,
-                mass.points=list(mass.points),
-                masses=list(gqz(k, minweight=1e-14)$w),
-                sdev=list(list(sdev=sdev, sdevk=sdevk)),
-                shape=list(list(shape=shape,shapek=shapek)),
-                post.prob=list(matrix(w, nrow=N, byrow=FALSE, dimnames=list(names0, 1:k) )),
-                ebp=list(ebp), 
-                EMiter= iter - 1,
-                EMconverged=converged,
-                Misc=list(list(Disparity.trend=ML.dev,  lambda=lambda,mform=mform1))
+      # glmmGQ output
+      fit <- c( fit[1],
+                residuals = list(ebp.residuals),
+                fitted.values = list(ebp.fitted),
+                fit[c(8,9)],
+                disparity = ML.dev[iter],
+                deviance = Deviance,
+                fit[12],  
+                df.residual = N-np,
+                df.null = N-1,
+                fit[18],
+                call = call,
+                formula = formula,
+                random = rform,
+                data = list(subset(data,select=1:ddim[2])),
+                model = list(XZ),
+                weights = list(w0),
+                offset = list(off0), 
+                mass.points = list(mass.points),
+                masses = list(gqz(k, minweight=1e-21)$w),          
+                sdev = list(list(sdev=sdev, sdevk=sdevk)),
+                shape = list(list(shape=shape,shapek=shapek)),
+                post.prob = list(post.prob),
+                post.int =  list(post.int),
+                ebp = list(ebp),
+                EMiter = iter - 1,
+                EMconverged = converged,
+                lastglm = list(fit),
+                Misc=list(list(Disparity.trend=ML.dev,  lambda=lambda, mform=mform1, mform2=mform2,  group=group))
                 )
       class(fit) <-'glmmGQ'
   }

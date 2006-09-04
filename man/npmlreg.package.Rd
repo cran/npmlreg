@@ -14,8 +14,8 @@ Nonparametric maximum likelihood estimation or Gaussian quadrature
 \tabular{ll}{
 Package: \tab npmlreg\cr
 Type: \tab Package\cr
-Version: \tab 0.34\cr
-Date: \tab 2006-06-06\cr
+Version: \tab 0.38\cr
+Date: \tab 2006-09-04\cr
 License: \tab GPL version 2 or newer\cr
 }
 
@@ -58,7 +58,7 @@ Second Edition, Oxford Statistical Science Series, Oxford, UK.
 
 Einbeck, J., and Hinde, J. (2006). Nonparametric maximum likelihood estimation
  for random effect models in \R. Vignette to \R package  \pkg{npmlreg}. 
-Type \code{vignette("npmlreg")} to open it. 
+Type \code{vignette("npmlreg-v")} to open it. 
 
 
 }

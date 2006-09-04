@@ -1,0 +1,34 @@
+import("stats")
+import("graphics")
+
+export(alldist, allvc, dkern, family.glmmGQ, family.glmmNPML, gqz,
+post, model.matrix.glmmGQ, model.matrix.glmmNPML,
+plot.glmmGQ, plot.glmmNPML, predict.glmmGQ, predict.glmmNPML,
+print.glmmGQ, print.glmmNPML, summary.glmmGQ, summary.glmmNPML, 
+tolfind, weightslogl.calc.w, expand, expand.vc, binomial.expand)
+
+S3method(summary, glmmNPML)
+
+S3method(summary, glmmGQ)
+
+S3method(print, glmmNPML)
+
+S3method(print, glmmGQ)
+
+S3method(plot, glmmNPML)
+
+S3method(plot, glmmGQ)
+
+S3method(predict, glmmNPML)
+
+S3method(predict, glmmGQ)
+
+S3method(family, glmmNPML)
+
+S3method(family, glmmGQ)
+
+S3method(model.matrix, glmmNPML)
+
+S3method(model.matrix, glmmGQ)
+
+

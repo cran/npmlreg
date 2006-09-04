@@ -30,14 +30,16 @@ function(x,plot.opt=15, noformat= FALSE, ...){
   }
   
   if (plot.opt %%8 %in% c(4,5,6,7) ){#  EBP vs true values
-      class.col<-masspoint.classifier(x)
-      plot(x$y[1:length(x$case.weights)], predict(x,type="response"), xlab="true response", ylab="Emp. Bayes Pred." ,col=class.col)
+       
+      #class.col<- masspoint.classifier(x)
+      class.col<- post(x, level="lower")$classif
+      plot(x$y[1:length(x$weights)], predict(x,type="response"), xlab="true response", ylab="Emp. Bayes Pred." ,col=class.col)
       abline(0,1)         
   }
   
   if (plot.opt >7){   #wik
       if (is.infinite(abs(max(x$Misc$res)))){
-          return(c("Infinite values: Posterior probability plot not applicable for this object."))
+          cat("Infinite values: Posterior probability plot not applicable for this object."); return()
       }
       pmax<-max(x$post.prob)
       plot(x$Misc$res, x$post.prob[,1],col=1,type="p",ylim=c(0,pmax),ylab="post.prob", xlab="Residuals")

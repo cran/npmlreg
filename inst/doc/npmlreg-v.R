@@ -4,6 +4,7 @@
 data(galaxies, package="MASS")
 galaxies[78]<-26960
 gal<-as.data.frame(galaxies)
+rm(galaxies)
 
 
 ###################################################
@@ -34,7 +35,7 @@ glm(v1000~1,data=gal)
 ###################################################
 ### chunk number 6: 
 ###################################################
-galaxy.np1$Dev
+galaxy.np1$dev
 
 
 ###################################################
@@ -54,11 +55,11 @@ plot(galaxy.np4, plot.opt=3)
 ###################################################
 ### chunk number 9: 
 ###################################################
-(galaxy.np5 <- alldist(v1000~1,random=~1,k=5,data=gal, verbose=FALSE))$Disp
-(galaxy.np6 <- alldist(v1000~1,random=~1,k=6,tol=0.2,data=gal,verbose=FALSE))$Disp
-(galaxy.np7 <- alldist(v1000~1,random=~1,k=7,tol=0.12,data=gal,verbose=FALSE))$Disp
-(galaxy.np8 <- alldist(v1000~1,random=~1,k=8,tol=0.2,data=gal,verbose=FALSE))$Disp
-(galaxy.np9 <- alldist(v1000~1,random=~1,k=9,tol=0.06,data=gal,verbose=FALSE))$Disp
+(galaxy.np5 <- alldist(v1000~1,random=~1,k=5,data=gal, verbose=FALSE))$disp
+(galaxy.np6 <- alldist(v1000~1,random=~1,k=6,tol=0.2,data=gal,verbose=FALSE))$disp
+(galaxy.np7 <- alldist(v1000~1,random=~1,k=7,tol=0.12,data=gal,verbose=FALSE))$disp
+(galaxy.np8 <- alldist(v1000~1,random=~1,k=8,tol=0.2,data=gal,verbose=FALSE))$disp
+(galaxy.np9 <- alldist(v1000~1,random=~1,k=9,tol=0.06,data=gal,verbose=FALSE))$disp
 
 
 ###################################################
@@ -119,7 +120,7 @@ data(fabric, package="gamlss")
 ###################################################
 ### chunk number 18: 
 ###################################################
-faults.g1$Dev
+faults.g1$dev
 
 
 ###################################################
@@ -158,7 +159,7 @@ rainfall$x2<- rainfall$x^2; rainfall$x3<- rainfall$x^3
 ###################################################
 ### chunk number 24: 
 ###################################################
- toxo.np$Disparity
+ toxo.np$disparity
 
 
 ###################################################
@@ -177,7 +178,7 @@ rainfall$x2<- rainfall$x^2; rainfall$x3<- rainfall$x^3
 ### chunk number 27: 
 ###################################################
    round(t(toxo.np$post.prob),digits=2)
-   plot(toxo.np, plot.opt=8)
+   plot(toxo.np, plot.opt=3)
 
 
 ###################################################
@@ -196,30 +197,36 @@ predict(toxo.np, type="response")
 ###################################################
 ### chunk number 30: 
 ###################################################
-predict(toxo.npx,type="response",newdata=data.frame(x=2))
+fitted(toxo.np)
 
 
 ###################################################
 ### chunk number 31: 
+###################################################
+predict(toxo.npx,type="response",newdata=data.frame(x=2))
+
+
+###################################################
+### chunk number 32: 
 ###################################################
 data(hosp)
 (fitnp3<-  alldist(duration~age+temp1, data=hosp,k=3, family=Gamma(link=log),tol=0.2)) 
 
 
 ###################################################
-### chunk number 32: 
+### chunk number 33: 
 ###################################################
  fitnp3$shape
 
 
 ###################################################
-### chunk number 33: 
+### chunk number 34: 
 ###################################################
  (fitnp3e<-  alldist(duration~age+temp1, data=hosp,k=3, family=Gamma(link=log),tol=0.2,shape=1))
 
 
 ###################################################
-### chunk number 34: 
+### chunk number 35: 
 ###################################################
  data(Oxboys, package = "nlme")
  Oxboys$boy <- gl(26,9) 
@@ -228,56 +235,56 @@ data(hosp)
 
 
 ###################################################
-### chunk number 35: 
+### chunk number 36: 
 ###################################################
  (Oxboys.g20 <- allvc(height~age,random=~1|boy,data=Oxboys,random.distribution='gq',k=20))
 
 
 ###################################################
-### chunk number 36: 
+### chunk number 37: 
 ###################################################
  (Oxboys.np7 <- allvc(height~age,random=~1|boy,data=Oxboys,random.distribution='np',k=7))
  (Oxboys.np8 <- allvc(height~age,random=~1|boy,data=Oxboys,random.distribution='np',k=8)) 
 
 
 ###################################################
-### chunk number 37: 
-###################################################
- plot(Oxboys.np8, plot.opt=2)
-
-
-###################################################
 ### chunk number 38: 
 ###################################################
- (Oxboys.np8s <- allvc(height~age,random=~age|boy,data=Oxboys,random.distribution='np',k=8))
+ plot(Oxboys.np8, plot.opt=2)
 
 
 ###################################################
 ### chunk number 39: 
 ###################################################
-  Oxboys.np8$Disp-Oxboys.np8s$Disp
+ (Oxboys.np8s <- allvc(height~age,random=~age|boy,data=Oxboys,random.distribution='np',k=8))
 
 
 ###################################################
 ### chunk number 40: 
 ###################################################
- plot(Oxboys.np8, plot.opt=2)
+  Oxboys.np8$Disp-Oxboys.np8s$Disp
 
 
 ###################################################
 ### chunk number 41: 
 ###################################################
- data(irlsuicide)
+ plot(Oxboys.np8, plot.opt=2)
 
 
 ###################################################
 ### chunk number 42: 
 ###################################################
-citation(package="npmlreg")
+ data(irlsuicide)
 
 
 ###################################################
 ### chunk number 43: 
+###################################################
+citation(package="npmlreg")
+
+
+###################################################
+### chunk number 44: 
 ###################################################
 ls("package:npmlreg")
 
