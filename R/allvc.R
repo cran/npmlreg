@@ -88,8 +88,9 @@ function(formula,
   mform1   <- mform[1]
   mform2   <- mform[2]
   if(!(mform2 %in% names(data))){stop("The specified clustering variable is not contained in the data frame.")}  
-  rlevels  <- factor(data[,mform2])  #11-08-06
-  group    <- factor(levels(rlevels))#20-04-06 
+  # rlevels  <- factor(data[,mform2])  #11-08-06
+  # group    <- factor(levels(rlevels))#20-04-06 
+  # postgroup <- data[,mform2]
   
   # initial fit and simple glm for k=1
   fit    <- glm(formula, family=family, weights=pweights, offset=offset, data=data,...)
@@ -160,14 +161,18 @@ function(formula,
               EMiter = 0,
               EMconverged = "none",
               lastglm = list(fit),
-              Misc = list(list(lambda=lambda)),
+              Misc = list(list(lambda=lambda))
               )
       class(fit)<-'glmmNPML'
       return(fit)
-  } else if (!(k %in% 1:30)){
+  } else if (!(k %in% 1:600)){
       stop("This choice of k is not supported.")
   }
-
+  
+  # Omit integration point if GH weights are too small  
+  tmp      <- gqz(k, minweight = 1e-55)  #from version 0.39-1
+  k        <- min(k, dim(tmp)[1])
+  
   # Expand the data
   if(family$family=="binomial"){
       YP   <- binomial.expand(Y,k,rep(1,N)); Y<- YP[[1]]; PY<-YP[[2]];r<-YP[[3]]; n<-YP[[4]]
@@ -177,13 +182,14 @@ function(formula,
   X        <- expand.vc(X,k)# expand design matrix
   datak    <- expand.vc(data,k)
   kindex   <- rep(1:k,rep(N,k))# index for the mixtures
-  tmp      <- gqz(k,minweight=1e-21)  #from version 0.32-2
+  #tmp      <- gqz(k,minweight=1e-55)  # 0.39-1
   z0       <- -tmp$l
   z        <- rep(-tmp$l,rep(N,k))
   p        <- tmp$w
   group    <- factor(levels(factor(datak[,mform2])))# 20/04/06 
   offset   <- datak$offset    # expand offset
   pweights <- datak$pweights  # expand weights
+  
 
   # Generate the random design matrix and append to fixed matrix
   if (random.distribution=='np'){  # Nonparametric random effect
@@ -270,7 +276,7 @@ function(formula,
           masspoint<- fit$coef[l0:(l0+k-1)]
           followmass<-rbind(followmass, masspoint)
       }
-
+      
       # Fitted response from current model
       Mu <- fitted(fit)
       
@@ -333,8 +339,8 @@ function(formula,
   
       # Check for likelihood spikes
       if (random.distribution != 'gq' && spike.protect!=0){
-          if (family$family=='gaussian' && abs(min(sdevk/(fit$coef[(length(fit$coef)-k+1):length(fit$coef)]))) <0.000001*spike.protect){break}  #Avoid Likelihhod Spikes
-          if (family$family=='Gamma' && abs(max(shapek/(fit$coef[(length(fit$coef)-k+1):length(fit$coef)])))> 10^6*spike.protect){break}
+          if (family$family=='gaussian' && abs(min(sdevk/masspoint)) <0.000001*spike.protect){break}  #Avoid Likelihhod Spikes
+          if (family$family=='Gamma' && abs(max(shapek/masspoint))> 10^6*spike.protect){break}
       }  
   
    }########################### End of EM loop #############
@@ -430,7 +436,7 @@ function(formula,
                  if (mform1=='1'){ points(rep(iter-1,length(R)),R)}}
             if (verbose){cat("EM Trajectories plotted.\n")}
       }
-
+      
       # glmmNPML output 
       fit <- c( fit[1],
                 residuals = list(ebp.residuals),
@@ -459,7 +465,7 @@ function(formula,
                 EMiter = iter - 1,
                 EMconverged = converged,
                 lastglm = list(fit),
-                Misc=list(list(Disparity.trend=ML.dev,EMTrajectories=followmass, res=R,ylim=ylim,lambda=lambda,mform=mform1, mform2=mform2, group=group))
+                Misc=list(list(Disparity.trend=ML.dev,EMTrajectories=followmass, res=R,ylim=ylim,lambda=lambda,mform=mform1, mform2=mform2))
                 )
       class(fit) <-'glmmNPML'
   } else {
@@ -491,7 +497,7 @@ function(formula,
                 EMiter = iter - 1,
                 EMconverged = converged,
                 lastglm = list(fit),
-                Misc=list(list(Disparity.trend=ML.dev,  lambda=lambda, mform=mform1, mform2=mform2,  group=group))
+                Misc=list(list(Disparity.trend=ML.dev,  lambda=lambda, mform=mform1, mform2=mform2))
                 )
       class(fit) <-'glmmGQ'
   }

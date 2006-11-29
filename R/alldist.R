@@ -72,7 +72,7 @@
   X  <- Y <- XZ <- NULL
   Y  <- model.response(mf, "numeric") # response
   Ym <- is.matrix(Y)
-  N  <- NROW(Y)  #corresponds to ddim[1] if there are no missing values
+  N  <- NROW(Y)  # corresponds to ddim[1] if there are no missing values
   
   # Set up weights and offset for initial glm
   if (is.null(offset)){offset  <-rep(0,N) }
@@ -154,15 +154,18 @@
               EMiter = 0,
               EMconverged = "none",
               lastglm = list(fit),
-              Misc = list(list(lambda=lambda)),
+              Misc = list(list(lambda=lambda))
               )          
       class(fit)<-'glmmNPML'
       return(fit)
-  } else if (!(k %in% 1:30)){
+  } else if (!(k %in% 1:600)){
       stop("This choice of k is not supported.")
-     }
+  }
+
+  # Omit integration point if GH weights are too small  
+  tmp       <- gqz(k, minweight=1e-55)  #from version 0.39-1
+  k         <- min(k, dim(tmp)[1])
   
-             
   # Expand the data
   if(family$family=="binomial"){
       YP    <- binomial.expand(Y,k,rep(1,N)); Y<- YP[[1]]; PY<-YP[[2]];r<-YP[[3]]; n<-YP[[4]]
@@ -171,7 +174,7 @@
   }          
   datak     <- expand(data,k)
   kindex    <- rep(1:k,rep(N,k))# index for the mixtures, for version 0.31 or higher only used for allvc 
-  tmp       <- gqz(k,minweight=1e-21)  #from version 0.32-2
+  #tmp       <- gqz(k,minweight=1e-55)  # from version 0.39-1
   z0        <- -tmp$l
   z         <- rep(-tmp$l,rep(N,k))
   p         <- tmp$w
@@ -199,7 +202,7 @@
   if (dim(X)[1]!= dim(Z)[1]){ cat("The missing value routine cannot cope with this model. Please specify the random term also as fixed term and try again. " )}
   XZ <- cbind(X,Z)
   
-  #Extend the linear predictor:
+  # Extend the linear predictor:
   if (missing(pluginz)){sz<-tol* sdev*z} else {sz<-rep(pluginz-fit$coef[[1]],rep(N,k))}
   Eta <- fit$linear.predictor + sz
            # The extra term stops unrelated regressions
@@ -315,9 +318,9 @@
       
       # Likelihood Spike Protection
       if (random.distribution != 'gq' && spike.protect!=0){
-          if (family$family=='gaussian' && abs(min(sdevk/(fit$coef[(length(fit$coef)-k+1):length(fit$coef)]))) <0.000001*spike.protect){break}  
-          if (family$family=='Gamma' && abs(max(shapek/(fit$coef[(length(fit$coef)-k+1):length(fit$coef)])))> 10^6*spike.protect){break}
-    }  
+          if (family$family=='gaussian' && abs(min(sdevk/masspoint)) < 0.000001*spike.protect){break}  
+          if (family$family=='Gamma' && abs(max(shapek/masspoint)) > 10^6*spike.protect){break}
+      }  
   }###########################End of EM loop#############
  
  
@@ -414,6 +417,13 @@
                         if (mform=='1'){ points(rep(iter-1,length(R)),R)}}
             if (verbose){ cat("EM Trajectories plotted.\n")}
       }
+      
+      #x11()
+      #par(mfrow=c(2,2))
+      #plot(density(R))
+      #print(R)
+      #qqnorm(R)
+      
       
       # glmmNPML output    
       fit <- c( fit[1],

@@ -26,15 +26,14 @@ print.glmmGQ(x, digits=max(3,getOption('digits')-3),  ...)
 \details{
 
 The \code{summary...}- and \code{print...} -functions invoke the generic 
-\code{UseMethod(...)} function and pick the summary for the right model class
- automatically. 
+\code{UseMethod(...)} function and detect the right model class
+ automatically.  In other words, it is enough to write
+ \code{summary(...)} or \code{print(...)}.
 
-A summary of the \code{glm} fitted in the last EM iteration is available via 
-\code{summary(object)$lastglmsumm}.
 }
 
 \value{
-  Print or Summary.
+  Prints regression output or summary on screen.
   
   Objects returned by \code{summary.glmmNPML}  or  \code{summary.glmmGQ} are 
   essentially identical to objects of class \code{glmmNPML} or \code{glmmGQ}.

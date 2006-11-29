@@ -16,7 +16,7 @@ dkern(x, y, k, lambda)
   \item{lambda}{smoothing parameter}
 }
 \details{
-This kernel was introduced in Aitkinson & Aitken (1976); see also Titterington (1980). 
+This kernel was introduced in Aitchison & Aitken (1976); see also Titterington (1980). 
  
  The setting \code{lambda =1/k} corresponds to the extreme case 'maximal smoothing',
    while \code{lambda = 1} means `no smoothing'. Statistically sensible settings are 

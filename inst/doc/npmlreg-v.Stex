@@ -60,7 +60,7 @@ In this handbook the concept of NPML estimation is briefly explained (Section \r
  a variety of  data examples are given (Section \ref{examples}), which illustrate the functionalities 
  of {\tt alldist} and {\tt allvc}. The  R package {\bf npmlreg} is available for download at
 \begin{center}
-{\tt http://www.nuigalway.ie/maths/je/npml.html}.
+{\tt http://www.nuigalway.ie/maths/jh/npml.html}.
 \end{center}
 
  
@@ -623,7 +623,7 @@ According to the theory on EM, this shouldn't happen. This phenomenon occurs as
  The difference in disparities is
  %37
  \begin{Scode}
-  Oxboys.np8$Disp-Oxboys.np8s$Disp
+  Oxboys.np8$disp-Oxboys.np8s$disp
 \end{Scode}
  on 7df, showing clear heterogeneity in the slope.
  
@@ -733,13 +733,13 @@ Biostatistics.} Thomson Learning, Duxbury, CA, USA.
 The help files can be found at 
 
 \begin{center}
-{\tt http://www.nuigalway.ie/maths/je/npmlreg/html/00Index.html}
+{\tt http://www.nuigalway.ie/maths/jh/npmlreg/html/00Index.html}
 \end{center}
 
 \noindent or in the {\bf npmlreg} Manual which can be downloaded in PDF format from
 
 \begin{center}
-{\tt http://www.nuigalway.ie/maths/je/npml.html} .
+{\tt http://www.nuigalway.ie/maths/jh/npml.html} .
 \end{center}
 
 A list of all functions currently availabe in {\bf npmlreg} is given below:

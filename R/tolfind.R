@@ -73,7 +73,7 @@ function(formula,
   weights <- model.weights(mf) 
   Y  <- model.response(mf, "numeric") # response
   Ym <- is.matrix(Y)
-  N  <- NROW(Y)  #corresponds to ddim[1] if there are no missing values
+  N  <- NROW(Y)  # corresponds to ddim[1] if there are no missing values
   
   if (is.null(offset)){offset  <-rep(0,N) }
   if (is.null(weights)){weights<-rep(1,N)}   
@@ -86,10 +86,6 @@ function(formula,
   step.min        <- step.min.conv <- 1
   mform           <- strsplit(as.character(random)[2],'\\|')[[1]]
   mform           <- gsub(' ', '',mform)
-  
-  #if(missing(offset)) data$poffset  <- rep(0, length(data[,1])) else data$poffset  <- offset
-  #if(missing(weights))data$pweights <- rep(1, length(data[,1])) else data$pweights <- weights
-  #data <- data[!is.na(data$pweights) & ! is.na(data$poffset),]
   
   # Configure graphics window
   if (!noformat){

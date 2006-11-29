@@ -40,7 +40,7 @@ tolfind(formula,
   \item{family}{conditional distribution of responses. "gaussian", "poisson", "binomial", or "Gamma" can be set.}
   \item{data}{the data frame (mandatory, even if it is attached to the workspace!).  }
   \item{k}{the number of mass points/integration points (supported are 
-      up to 30 mass points). }
+      up to 600 mass points). }
     \item{random.distribution}{the mixing distribution, Gaussian Quadrature 
       (\code{gq}) or NPML (\code{np}) can be set.   }    
   \item{offset}{an optional offset to be included in the model.}
@@ -108,7 +108,7 @@ the speed of convergence.
 
 Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. Second Edition, Oxford Statistical Science Series, Oxford, UK. 
 
-Böhning, D. (1999). Computer-Assisted Analysis of Mixtures and Applications. Meta-Analysis, Disease Mapping and others. Chapman & Hall / CRC, Boca Raton, FL, USA.
+Boehning, D. (1999). Computer-Assisted Analysis of Mixtures and Applications. Meta-Analysis, Disease Mapping and others. Chapman & Hall / CRC, Boca Raton, FL, USA.
 
 Einbeck, J. & Hinde, J. (2006). A note on NPML estimation for exponential family regression models with unspecified dispersion parameter. Austrian Journal of Statistics 35, 233-243. 
 }

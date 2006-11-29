@@ -63,7 +63,7 @@ allvc(formula,
   \item{family}{conditional distribution of responses. "gaussian", "poisson", "binomial", or "Gamma" can be set. If "gaussian" or "Gamma", then equal component dispersion parameters are assumed, except if the optional parameter lambda is modified.   }
   \item{data}{the data frame (mandatory, even if it is attached to the workspace!). }
   \item{k}{the number of mass points/integration points 
-    (supported are up to 30 mass points).}
+    (supported are up to 600 mass points).}
   \item{random.distribution}{the mixing distribution, Gaussian Quadrature (\code{gq}) or NPML (\code{np}) can be set.   }
   \item{tol}{the tol scalar (usually, \eqn{0<}\code{tol} \eqn{\le 1}{<= 1})   }
   \item{offset}{an optional offset to be included in the model.}
@@ -139,7 +139,10 @@ allvc(formula,
   \code{alldist} equal to 2 will duplicate each data point and hence double the 
   disparity and deviance.  
 
-
+  For \code{k} \eqn{\ge 70}{>= 70}, mass points with negligible mass
+  (i.e. < 1e-55) are omitted.  The maximum number of 'real' mass points
+  is then 240.
+  
 }
 \value{
 

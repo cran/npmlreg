@@ -53,8 +53,10 @@ latent variable modelling. Boca Raton: Chapman and Hall/CRC.
 }
 \examples{
 gqz(20, minweight=1e-14)
-  # gives 20 GH mass points, as used as EM starting points for k=20 
-  # in alldist  and allvc 
+  # gives k=20 GH integration points. These are used in alldist  
+  # and allvc as fixed mass point locations when working with 
+  # option \code{random.distribution='gq'}, and serve as EM starting points 
+  # otherwise. 
 }
 \keyword{ models }% at least one, from doc/KEYWORDS
 \keyword{ regression }% __ONLY ONE__ keyword per line
