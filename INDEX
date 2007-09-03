@@ -1,7 +1,6 @@
 alldist                 NPML estimation or Gaussian quadrature for
-                        overdispersed GLM's 
-allvc                   NPML estimation or Gaussian quadrature for
-                        variance component models                        
+                        overdispersed GLM's and variance component
+                        models
 dkern                   Aitchison-Aitken kernel
 family.glmmNPML         Generic functions for objects of class glmmNPML
                         or glmmGQ

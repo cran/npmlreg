@@ -69,15 +69,15 @@ function(formula,
   offset  <- model.offset(mf) 
   weights <- model.weights(mf)
   X  <- Y <- XZ <- NULL
-  Y  <- model.response(mf, "numeric") # response
+  Y  <- model.response(mf, "any") # response # for 0.42 changed from "numeric to "any"
   Ym <- is.matrix(Y)
   N  <- NROW(Y)  # corresponds to ddim[1] if there are no missing values
   
   # Set up weights and offset  for initial glm
-  if (is.null(offset)){offset<-rep(0,N) }
-  if (is.null(weights)){weights<-rep(1,N)}   
+  if (is.null(offset)){offset <- rep(0,N) }
+  if (is.null(weights)){weights <- rep(1,N)}   
   data$offset <- numeric(1); data$pweights<-numeric(1)  
-  data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] #omit missing values   
+  data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] # omit missing values   
   data$offset <- offset;  data$pweights <- weights
   
   # Extract variable names from random part 
@@ -137,7 +137,9 @@ function(formula,
 
   # Return (glm) output and terminate if k=1
   if (k == 1){
-      names(fit$coefficients)<-ifelse(names(fit$coefficients)=="(Intercept)", "MASS1", names(fit$coefficients))
+      if (random.distribution=="np"){
+        names(fit$coefficients) <- ifelse(names(fit$coefficients)=="(Intercept)", "MASS1", names(fit$coefficients))
+      }
       post.prob <-  matrix(1,N,1,dimnames=list(names0,"") )
       
       fit <- c( fit[c(1,2,3,8,9)],
@@ -152,9 +154,10 @@ function(formula,
               weights = list(w0),
               offset = list(off0),
               mass.points = list(fit$coef[1]),
-              masses = 1,
+              masses = list(c("MASS1"=1)),
               sdev = list(list(sdev=sdev, sdevk=sdev)),
               shape = list(list(shape=shape,shapek=shape)),
+              rsdev= 0,
               post.prob = list(post.prob),
               post.int =  list(fit$coef[1]),
               ebp = list(family$linkfun(fit$fitted)),
@@ -163,15 +166,20 @@ function(formula,
               lastglm = list(fit),
               Misc = list(list(lambda=lambda))
               )
-      class(fit)<-'glmmNPML'
+      if (random.distribution =="np"){
+              class(fit) <- 'glmmNPML'
+      } else {
+             class(fit) <- 'glmmGQ'
+      }     
       return(fit)
   } else if (!(k %in% 1:600)){
       stop("This choice of k is not supported.")
   }
   
   # Omit integration point if GH weights are too small  
-  tmp      <- gqz(k, minweight = 1e-55)  #from version 0.39-1
-  k        <- min(k, dim(tmp)[1])
+  tmp      <- gqz(k, minweight = 1e-50)  # from version 0.39-1; changed to 1e-50 in v0.42
+  k0       <- k   # from 0.42: save for glmmGQ output
+  k        <- min(k, dim(tmp)[1]);
   
   # Expand the data
   if(family$family=="binomial"){
@@ -182,7 +190,7 @@ function(formula,
   X        <- expand.vc(X,k)# expand design matrix
   datak    <- expand.vc(data,k)
   kindex   <- rep(1:k,rep(N,k))# index for the mixtures
-  #tmp      <- gqz(k,minweight=1e-55)  # 0.39-1
+  #tmp      <- gqz(k,minweight=1e-55)  # omitted from version 0.39-1
   z0       <- -tmp$l
   z        <- rep(-tmp$l,rep(N,k))
   p        <- tmp$w
@@ -221,20 +229,20 @@ function(formula,
 
   # Extend linear predictor
   if (missing(pluginz)){sz<-tol* sdev*z} else {sz<-rep(pluginz-fit$coef[[1]],rep(N,k))}
-  Eta<-fit$linear.predictor + sz
+  Eta <- fit$linear.predictor + sz
         # The extra term stops unrelated regressions
   
   
   # Initial EM trajectory values 
   if (random.distribution=="np"){
-      tol<- max(min(tol,1),1-damp)
+      tol <- max(min(tol,1),1-damp)
       if(length(fit$coef)==1){
-          followmass<-matrix(Eta[(1:k)*N],1,k)-offset[(1:k)*N]
+          followmass <- matrix(Eta[(1:k)*N],1,k)-offset[(1:k)*N]
           } else {
-          followmass<-matrix(fit$coef[1]+sz[(1:k)*N],1,k)
+          followmass <- matrix(fit$coef[1]+sz[(1:k)*N],1,k)
           }
   }  else {
-      followmass<-NULL; tol<-1
+      followmass <- NULL; tol <- 1
   }
 
   # Expanded fitted values
@@ -252,11 +260,11 @@ function(formula,
   groupk <- interaction(groupijk,factor(kindex))
   mik    <- matrix(tapply(f*pweights,groupk,sum),nrow=nr,ncol=k)  #16-03-06
   tmp    <- weightslogl.calc.w(p,mik,rep(1,nr))   #16-03-06
-  w <- tmp$w[match(groupij,group),]    #17-03-6
+  w      <- tmp$w[match(groupij,group),]    #17-03-06
 
   # Initialize for EM loop
-  ML.dev <- ML.dev0
-  iter <- ml<- 1
+  ML.dev    <- ML.dev0
+  iter      <- ml <- 1
   converged <- FALSE
   sdevk<-rep(sdev,k);  shapek<-rep(shape,k)    #19-03-06
    
@@ -339,7 +347,7 @@ function(formula,
   
       # Check for likelihood spikes
       if (random.distribution != 'gq' && spike.protect!=0){
-          if (family$family=='gaussian' && abs(min(sdevk/masspoint)) <0.000001*spike.protect){break}  #Avoid Likelihhod Spikes
+          if (family$family=='gaussian' && abs(min(sdevk/masspoint)) <0.000001*spike.protect){break}  # Avoid Likelihhod Spikes
           if (family$family=='Gamma' && abs(max(shapek/masspoint))> 10^6*spike.protect){break}
       }  
   
@@ -355,7 +363,7 @@ function(formula,
   }
   
   # Compute model deviance
-  Deviance<- switch(family$family,
+  Deviance <- switch(family$family,
               "gaussian"= sdev^2*ML.dev[iter]-sdev^2* sum(data$pweights[1:N] * log(2*pi*sdev^2)),
               "poisson" =ML.dev[iter] +2*sum(data$pweights[1:N]*(-Y[1:N]+Y[1:N]*log(Y[1:N]+(Y[1:N]==0))-lfactorial(Y[1:N]))),
               "binomial"=ML.dev[iter] +2*sum(data$pweights[1:N]*(lfactorial(n)-lfactorial(r)-lfactorial(n-r) - n*log(n) + r*log(r+(r==0))+(n-r)*log(n-r+((n-r)==0)))[1:N]),
@@ -363,19 +371,20 @@ function(formula,
               )
   
   # Compute  posterior prob. etc.                          
-  mass.points   <- masses<-NULL
+  mass.points   <- masses <- NULL
   np            <- length(fit$coef)
-  ebp           <- apply(w*matrix(fit$linear.predictor,N,k,byrow=FALSE),1,sum)
+  ebp           <- apply(w*matrix(fit$linear.predictor,N,k,byrow=FALSE),1,sum)  # Emp. Bayes Pred. (Aitkin, 96)
   ebp.fitted    <- family$linkinv(ebp)
   ebp.residuals <- Y[1:N]- ebp.fitted
   names(ebp)    <- names(ebp.fitted) <- names(ebp.residuals) <- names0
-  if (is.na(fit$coefficients[np])){length(fit$coefficients)<-np<-np-1}# if one variable is random *and* fixed
+  if (mform1 %in% substring(names(fit$coef),1, nchar(mform1))){length(fit$coefficients) <- np <- np-1}# if one variable is random *and* fixed 
+  # if (is.na(fit$coefficients[np])){length(fit$coefficients) <- np <- np-1}# replaced by the line above from 0.42 on
   m <- seq(1,np)[substr(attr(fit$coefficients, 'names'),1,4)=='MASS']
-  if (random.distribution=="np"){
-      mass.points   <- fit$coefficients[m]
+  if (random.distribution=="np"){ 
+      mass.points   <- fit$coefficients[m] # from 0.42
   } else {  
-      a <- ifelse(names(fit$coef[1])== "(Intercept)", fit$coef[1], 0) #02-08-06
-      mass.points <- a + fit$coef[np]*z0
+      a <- ifelse(names(fit$coef[1])== "(Intercept)", fit$coef[1], 0) 
+      mass.points <- a + fit$coef["z"]*z0           # from 0.42, np replaced by "z"
   }
   post.prob     <- matrix(w, nrow=N, byrow=FALSE, dimnames=list(names0, 1:k) )
   post.int      <- as.vector(post.prob %*% mass.points[1:k]); names(post.int)<-names0
@@ -402,10 +411,11 @@ function(formula,
 
   # Prepare output for glmmNPML objects
   if (random.distribution=="np") {
-
-      # Mixture proportions
-      masses <- as.vector(apply(tmp$w,2,mean)) # differs from alldist - no weights needed on upper level! 
-      names(masses) <- paste('MASS',1:k,sep='')
+      masses        <- as.vector(apply(tmp$w,2,mean))                # differs from alldist - no weights needed on upper level! 
+      names(masses) <- paste('MASS',1:k,sep='')                    
+      
+      # Estimate random effect standard deviation # from 0.42
+      rsdev         <- sqrt(sum(masses * (mass.points[1:length(masses)]- sum(masses*mass.points[1:length(masses)]) )^2))
       
       # Compute fixed part residuals
       if (family$family=="binomial"){
@@ -436,6 +446,7 @@ function(formula,
                  if (mform1=='1'){ points(rep(iter-1,length(R)),R)}}
             if (verbose){cat("EM Trajectories plotted.\n")}
       }
+
       
       # glmmNPML output 
       fit <- c( fit[1],
@@ -445,7 +456,7 @@ function(formula,
                 disparity = ML.dev[iter],
                 deviance = Deviance,
                 fit[12],  
-                df.residual = N-np-k+1,
+                df.residual = N - np -k+1, 
                 df.null = N-1,
                 fit[18],
                 call = call,
@@ -459,6 +470,7 @@ function(formula,
                 masses = list(masses),               
                 sdev = list(list(sdev=sdev, sdevk=sdevk)),
                 shape = list(list(shape=shape,shapek=shapek)),
+                rsdev = list(rsdev),
                 post.prob = list(post.prob),
                 post.int =  list(post.int),
                 ebp = list(ebp),
@@ -488,9 +500,10 @@ function(formula,
                 weights = list(w0),
                 offset = list(off0), 
                 mass.points = list(mass.points),
-                masses = list(gqz(k, minweight=1e-21)$w),          
+                masses = list(gqz(k0, minweight=1e-50)$w),          
                 sdev = list(list(sdev=sdev, sdevk=sdevk)),
                 shape = list(list(shape=shape,shapek=shapek)),
+                rsdev = fit$coef[["z"]],
                 post.prob = list(post.prob),
                 post.int =  list(post.int),
                 ebp = list(ebp),

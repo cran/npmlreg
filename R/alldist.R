@@ -70,7 +70,7 @@
   offset  <- model.offset(mf) 
   weights <- model.weights(mf)
   X  <- Y <- XZ <- NULL
-  Y  <- model.response(mf, "numeric") # response
+  Y  <- model.response(mf, "any") # response  # for 0.42 changed from "numeric to "any"
   Ym <- is.matrix(Y)
   N  <- NROW(Y)  # corresponds to ddim[1] if there are no missing values
   
@@ -78,7 +78,7 @@
   if (is.null(offset)){offset  <-rep(0,N) }
   if (is.null(weights)){weights<-rep(1,N)}   
   data$offset <- numeric(1); data$pweights<-numeric(1)
-  data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] #omit missing values   
+  data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] # omit missing values   
   data$offset<-offset;  data$pweights<-weights
   
   # Extract variable names from random part 
@@ -132,7 +132,9 @@
 
   # Return (glm) output and terminate if k=1  
   if (k == 1) {
-      names(fit$coefficients)<-ifelse(names(fit$coefficients)=="(Intercept)", "MASS1", names(fit$coefficients))
+      if (random.distribution=="np"){
+            names(fit$coefficients) <- ifelse(names(fit$coefficients)=="(Intercept)", "MASS1", names(fit$coefficients))
+      }
       fit <- c( fit[c(1,2,3,8,9)],
               disparity = ML.dev0,
               deviance = fit$dev,
@@ -145,9 +147,10 @@
               weights = list(w0),
               offset = list(off0),
               mass.points = list(fit$coef[1]),
-              masses = 1,
+              masses = list(c("MASS1"=1)),
               sdev = list(list(sdev=sdev, sdevk=sdev)),
               shape = list(list(shape=shape,shapek=shape)),
+              rsdev = 0,
               post.prob = list(matrix(1,N,1,dimnames=list(names0,"") )),
               post.int =  list(fit$coef[1]),
               ebp = list(family$linkfun(fit$fitted)),
@@ -156,14 +159,19 @@
               lastglm = list(fit),
               Misc = list(list(lambda=lambda))
               )          
-      class(fit)<-'glmmNPML'
+      if (random.distribution =="np"){
+              class(fit) <- 'glmmNPML'
+      } else {
+             class(fit) <- 'glmmGQ'
+      }
       return(fit)
   } else if (!(k %in% 1:600)){
       stop("This choice of k is not supported.")
   }
 
   # Omit integration point if GH weights are too small  
-  tmp       <- gqz(k, minweight=1e-55)  #from version 0.39-1
+  tmp       <- gqz(k, minweight=1e-50)  # from version 0.39-1; changed to 1e-50 in v0.42
+  k0        <- k  # from 0.42: save for glmmGQ output
   k         <- min(k, dim(tmp)[1])
   
   # Expand the data
@@ -174,7 +182,7 @@
   }          
   datak     <- expand(data,k)
   kindex    <- rep(1:k,rep(N,k))# index for the mixtures, for version 0.31 or higher only used for allvc 
-  #tmp       <- gqz(k,minweight=1e-55)  # from version 0.39-1
+  #tmp       <- gqz(k,minweight=1e-55)  # omitted from version 0.39-1
   z0        <- -tmp$l
   z         <- rep(-tmp$l,rep(N,k))
   p         <- tmp$w
@@ -260,7 +268,7 @@
       # Fitted response from current model
       Mu <- fitted(fit)
       
-      #Unequal component dispersion parameters  
+      # Unequal component dispersion parameters  
       if (family$family=="gaussian"){
           if (sdev.miss){ sdev<- sqrt(sum((as.vector(w)*pweights)*(Y-Mu)^2)/sum(as.vector(w)*pweights))}
           sdevk<-rep(sdev,k) 
@@ -336,7 +344,7 @@
   }
   
   # Compute model deviance
-  Deviance<- switch(family$family,
+  Deviance <- switch(family$family,
               "gaussian"= sdev^2*ML.dev[iter]-sdev^2* sum(data$pweights[1:N] * log(2*pi*sdev^2)),
               "poisson" = ML.dev[iter] +2*sum(data$pweights[1:N]*(-Y[1:N]+Y[1:N]*log(Y[1:N]+ (Y[1:N]==0))-lfactorial(Y[1:N]))),
               "binomial"= ML.dev[iter] +2*sum(data$pweights[1:N]*(lfactorial(n)-lfactorial(r)-lfactorial(n-r) - n*log(n) + r*log(r+(r==0))+(n-r)*log(n-r+((n-r)==0)))[1:N]),
@@ -346,21 +354,22 @@
   # Compute  posterior prob. etc. 
   mass.points   <- masses <- NULL
   np            <- length(fit$coef)
-  ebp           <- apply(w*matrix(fit$linear.predictor,N,k,byrow=FALSE),1,sum)  #Emp. Bayes Pred. (Aitkin, 96)
+  ebp           <- apply(w*matrix(fit$linear.predictor,N,k,byrow=FALSE),1,sum)  # Emp. Bayes Pred. (Aitkin, 96)
   ebp.fitted    <- family$linkinv(ebp)
   ebp.residuals <- Y[1:N]- ebp.fitted
   names(ebp)    <- names(ebp.fitted) <- names(ebp.residuals) <- names0
-  if (is.na(fit$coefficients[np])){length(fit$coefficients)<-np<-np-1}# if one variable is random and fixed
+  if (mform %in% substring(names(fit$coef),1, nchar(mform))){length(fit$coefficients) <- np <- np-1}# if one variable is random *and* fixed 
+  # if (is.na(fit$coefficients[np])){length(fit$coefficients)<-np<-np-1}# replaced by the line above from 0.42 on
   m <- seq(1,np)[substr(attr(fit$coefficients,'names'),1,4)=='MASS']
   if (random.distribution=="np"){
-      mass.points   <- fit$coefficients[m]
+      mass.points   <-  fit$coefficients[m] # from 0.42
   } else {  
       a <- ifelse(names(fit$coef[1])== "(Intercept)", fit$coef[1], 0) #02-08-06
-      mass.points <- a + fit$coef[np]*z0
+      mass.points <- a + fit$coef["z"]*z0           # from 0.42, np replaced by "z"
   }
   post.prob     <- matrix(w, nrow=N, byrow=FALSE, dimnames=list(names0, 1:k) )
   post.int      <- as.vector(post.prob %*% mass.points[1:k]); names(post.int) <- names0
- 
+
   # Write tol values as plot title if alldist is called from tolfind:
   if ((plot.opt==1 || plot.opt==2) && par("mfrow")[1]>2) { 
         plot.main <- substitute("tol"== tol0, list(tol0=tol0))
@@ -374,7 +383,7 @@
   }
   if (plot.opt==1|| plot.opt==3){
       if  ((family$family=="gaussian" && sdev.miss|| family$family=="Gamma" && shape.miss) && damp  && random.distribution=='np' && iter>=max(8,ml+1)){
-          #Linear interpolation for initial cycles
+          # Linear interpolation for initial cycles
           ML.dev[2: max(7,ml)]<-ML.dev0+ 1:max(6,ml-1)/ max(7,ml)*(ML.dev[max(8,ml+1)]-ML.dev0) 
       }  
       plot(0:(iter-1),ML.dev, col=1,type="l",xlab='EM iterations',ylab='-2logL', main= plot.main )  
@@ -385,8 +394,11 @@
   if (random.distribution=="np") {
       
       # Mixture proportions 
-      masses <- as.vector(apply(w*pweights,2,sum))/sum(pweights[1:N]) #16-03-05
+      masses <- as.vector(apply(w*pweights,2,sum))/sum(pweights[1:N]) # 16-03-05
       names(masses) <- paste('MASS',1:k,sep='')
+       
+      # Estimate random effect standard deviation                  # from 0.42
+      rsdev <- sqrt(sum(masses * (mass.points[1:length(masses)] - sum(masses*mass.points[1:length(masses)]) )^2))
 
       # Compute fixed part residuals
       if (family$family=="binomial"){
@@ -399,7 +411,7 @@
       } else {
           R <- R0 - offset[1:N]
       }
-      R<-as.vector(R);  names(R)<-names0  
+      R <-as.vector(R);  names(R) <- names0  
       
       # EM trajectory plot  
       if (mform=='1' && any(is.finite(R))){
@@ -417,14 +429,7 @@
                         if (mform=='1'){ points(rep(iter-1,length(R)),R)}}
             if (verbose){ cat("EM Trajectories plotted.\n")}
       }
-      
-      #x11()
-      #par(mfrow=c(2,2))
-      #plot(density(R))
-      #print(R)
-      #qqnorm(R)
-      
-      
+                 
       # glmmNPML output    
       fit <- c( fit[1],
                 residuals = list(ebp.residuals),
@@ -447,6 +452,7 @@
                 masses = list(masses),               
                 sdev = list(list(sdev=sdev, sdevk=sdevk)),
                 shape = list(list(shape=shape,shapek=shapek)),
+                rsdev = list(rsdev),
                 post.prob = list(post.prob),
                 post.int = list(post.int),
                 ebp = list(ebp),
@@ -477,9 +483,10 @@
                 weights = list(w0),
                 offset = list(off0), 
                 mass.points = list(mass.points),
-                masses = list(gqz(k, minweight=1e-21)$w),          
+                masses = list(gqz(k0, minweight=1e-50)$w),          
                 sdev = list(list(sdev=sdev, sdevk=sdevk)),
                 shape = list(list(shape=shape,shapek=shapek)),
+                rsdev = fit$coef[["z"]],
                 post.prob = list(post.prob),
                 post.int =  list(post.int),
                 ebp = list(ebp),

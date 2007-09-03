@@ -12,8 +12,8 @@
    give predictions from those objects.  
 }
 \usage{
-predict.glmmNPML(object, newdata, type = "link", ...)
-predict.glmmGQ(object, newdata, type = "link", ...)
+\method{predict}{glmmNPML}(object, newdata, type = "link", ...)
+\method{predict}{glmmGQ}(object, newdata, type = "link", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -73,7 +73,7 @@ Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. S
 Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistics 14, 109-121. 
 
  }
-\author{Jochen Einbeck and John Hinde (2006).}
+\author{Jochen Einbeck and John Hinde (2007).}
 
 \seealso{ 
 \code{\link{alldist}}, \code{\link{allvc}}, \code{\link{predict}}

@@ -10,11 +10,10 @@
   \code{glmmNPML} and \code{glmmGQ}.
 }
 \usage{
-summary.glmmNPML(object, digits = max(3, getOption("digits") - 3), ...)
-summary.glmmGQ(object, digits = max(3, getOption("digits") - 3), ...)
-
-print.glmmNPML(x, digits=max(3,getOption('digits')-3), ...)
-print.glmmGQ(x, digits=max(3,getOption('digits')-3),  ...)
+\method{summary}{glmmNPML}(object, digits = max(3, getOption("digits") - 3), ...)
+\method{summary}{glmmGQ}(object, digits = max(3, getOption("digits") - 3), ...)
+\method{print}{glmmNPML}(x, digits=max(3,getOption('digits')-3), ...)
+\method{print}{glmmGQ}(x, digits=max(3,getOption('digits')-3),  ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -45,7 +44,7 @@ The \code{summary...}- and \code{print...} -functions invoke the generic
 }
 %\references{ ~put references to the literature/web site here ~ }
 \author{originally from Ross Darnell (2002), modified and prepared for 
-publication by Jochen Einbeck and John Hinde (2006).}
+publication by Jochen Einbeck and John Hinde (2007).}
 %\note{ ~~further notes~~ 
 %
 % ~Make other sections like Warning with \section{Warning }{....} ~

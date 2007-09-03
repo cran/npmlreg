@@ -4,15 +4,15 @@
 \alias{model.matrix.glmmNPML}
 \alias{model.matrix.glmmGQ}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Generic functions for objects of class glmmNPML or glmmGQ}
+\title{Methods for objects of class glmmNPML or glmmGQ}
 \description{
   Methods for the generic \code{family} and \code{model.matrix} functions 
 }
 \usage{
-family.glmmNPML(object, ...)
-family.glmmGQ(object, ...)
-model.matrix.glmmNPML(object, ...)
-model.matrix.glmmGQ(object, ...)
+\method{family}{glmmNPML}(object, ...)
+\method{family}{glmmGQ}(object, ...)
+\method{model.matrix}{glmmNPML}(object, ...)
+\method{model.matrix}{glmmGQ}(object, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -30,7 +30,7 @@ model.matrix.glmmGQ(object, ...)
 %  ...
 %}
 %\references{ ~put references to the literature/web site here ~ }
-\author{Jochen Einbeck and John Hinde (2006)}
+\author{Jochen Einbeck and John Hinde (2007)}
 \note{
 The generic \R functions \code{update()}, \code{coefficients()},  \code{coef()}, 
 \code{fitted()}, \code{fitted.values()}, and \code{df.residual()}

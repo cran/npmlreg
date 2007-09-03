@@ -47,7 +47,7 @@ which can be considered as a special case of generalized linear mixed models (GL
 One crucial advantage of the NPML approach is that the random effect distribution does not need 
 to be specified a priori, whereas the huge body of literature on GLMMs restricts nearly exclusively 
 on normally distributed random effects. Further, complicated integrations are avoided by approxmating 
-the marginal likelihhod by a simple finite mixture, for which standard fitting algorithms based on EM 
+the marginal likelihood by a simple finite mixture, for which standard fitting algorithms based on EM 
 exist and can be applied. NPML for generalized linear models with random effects was previously implemented 
 by Aitkin \& Francis (1995) in the GLIM4 language, which is however no longer widely used. The main functions 
 of this package,  {\tt alldist}  (for overdispersion) and {\tt allvc} (for variance component models), 
@@ -58,9 +58,9 @@ to R originally by Ross Darnell.
 
 In this handbook the concept of NPML estimation is briefly explained (Section \ref{method}) and
  a variety of  data examples are given (Section \ref{examples}), which illustrate the functionalities 
- of {\tt alldist} and {\tt allvc}. The  R package {\bf npmlreg} is available for download at
+ of {\tt alldist} and {\tt allvc}. The  R package {\bf npmlreg} is available for download on CRAN at
 \begin{center}
-{\tt http://www.nuigalway.ie/maths/jh/npml.html}.
+{\tt http://cran.r-project.org}.
 \end{center}
 
  
@@ -77,7 +77,7 @@ Assume there is given a set of explanatory vectors $x_1, \ldots,
 x_n$ and a set of observations  $y_1,\ldots,y_n$ sampled from an
 exponential family distribution\footnote{In the present
 implementation of {\tt alldist}, Gausssian, Poisson, Binomial, and Gamma
-distributed response are supported}  $f(y_i|\beta,\phi_i)$ with dispersion
+distributed response are supported.}  $f(y_i|\beta,\phi_i)$ with dispersion
 parameter $\phi_i$.  In a generalized linear model, predictors and
 response are assumed to be related through a link function $h$,
 \[
@@ -110,7 +110,7 @@ L=\prod_{i=1}^n\int f(y_i|z_i,\beta,\phi_i)g(z_i)\,dz_i
 \end{equation}
 and can be approximated by a finite mixture
 \[
-\prod_{i=1}^n\left\{\sum_{k=1}^Kf(y_i|z_k,\beta,\phi_k)\pi_k\right\} \equiv \prod_{i=1}^n\left\{\sum_{k=1}^Kf_{ik}\right\},
+\prod_{i=1}^n\left\{\sum_{k=1}^Kf(y_i|z_k,\beta,\phi_k)\pi_k\right\} \equiv \prod_{i=1}^n\left\{\sum_{k=1}^Kf_{ik}\pi_k\right\},
 \]
 where $z_k$ are the mass points and $\pi_k$ their masses. The log-likelihood is then given by
 \begin{equation}
@@ -147,14 +147,14 @@ standard EM algorithm:
 \begin{description}
 \item[{\bf Starting points}] Select starting values $\phi^{(0)}$, $\beta^{(0)}$, $z^{(0)}_k$, and $\pi^{(0)}_k$, $k=1, \ldots, K$.
 \item[{\bf E-Step}] Adjust weights using formula (\ref{weights}) with current parameter estimates.
-\item[{\bf M-Step}] Update parameter estimates fitting a weighted GLM, including mass points as dummy variables.
+\item[{\bf M-Step}] Update parameter estimates fitting a weighted GLM with weights $w_{ik}$, including mass points as dummy variables.
 \end{description}
 
 In the special case of a normally distributed random effect, one can employ
 tabulated Gauss-Hermite integration points  and their corresponding masses for $z_k$ and $\pi_k$, respectively, and consider these
 values as constants (Hinde, 1982).
 Otherwise, they have to be calculated simultaneously during the EM algorithm as outlined above (one then usually takes the
-GH points/masses as starting points, which are scaled outwards {\tt tol >1 } or inwards {\tt tol <1 } by means of a scaling parameter {\tt tol}). 
+GH points/masses as starting points, which are scaled outwards ({\tt tol >1 }) or inwards ({\tt tol <1 }) by means of a scaling parameter {\tt tol}). 
 As in this case no parametric specification of the random effect distribution is necessary,
 one refers to this method as `Nonparametric Maximum Likelihood' (NPML) estimation (Laird, 1978), which was adapted to the framework
 of overdispersed generalized linear models by Aitkin (1996a).  In difference to the original implementation in GLIM4, we use a 'damping' procedure in the initial cycles of the algorithm, which
@@ -168,7 +168,7 @@ see Einbeck \& Hinde (2006).
 \subsection{Finite Gaussian mixtures: The galaxy data}
 
 The data considered in this example are the recession velocities (in $km/s$) of 82 galaxies receding from our own, sampled from six well-separated conic sections of space.
-The full data were given by Postman et al. (1986).  They are part of the R package {\bf MASS} as data set {\em galaxies}.  Note that, in this dataset, 
+The full data were given by Postman et al. (1986).  They are part of the R package {\bf MASS} as data set {\tt galaxies}.  Note that, in this dataset, 
 there is a typo in the 78th observation, which should be 26960 instead of 26690. We correct this to obtain consistent and 
 comparable results  with those presented in Aitkin et al. (2005) and other references.
 
@@ -222,7 +222,7 @@ The deviance can be obtained by
 galaxy.np1$dev
 \end{Scode}
 
-\noindent which is certainly the same as for the GLM. Next , we fit discrete mixtures $\sum_{k=1}^K\pi_kf_k$, where the $f_k$ are normal densities with expectation 
+\noindent which is certainly the same as for the GLM. Next, we fit discrete mixtures $\sum_{k=1}^K\pi_kf_k$, where the $f_k$ are normal densities with expectation 
 $\mu_k$ and unknown, but equal variances $\sigma^2=\sigma^2_k$.
 Fitting models with $K=2, 3, 4$, and 5 mass points, one obtains
 %7
@@ -231,7 +231,7 @@ Fitting models with $K=2, 3, 4$, and 5 mass points, one obtains
 (galaxy.np3 <- alldist(v1000~1,random=~1,random.distribution='np',k=3,data=gal))
 (galaxy.np4 <- alldist(v1000~1,random=~1,random.distribution='np',k=4,data=gal))
 \end{Scode}
-and observes a steady decrease in disparity, i.e $-2\log L$. As a by-product, 
+and observes a steady decrease in disparity, i.e. $-2\log L$. As a by-product, 
 the {\tt alldist} routine produces a plot 
 showing how the disparity converges (Fig. 1 top), and another plot showing 
 the EM trajectories (Fig. 1 bottom).
@@ -273,7 +273,7 @@ W(x,y|\lambda)=\left\{\begin{array}{lcc}\lambda &\mbox{if}  & y=x\\
                         \]
 (Aitchison and Aitken, 1976). The setting $\lambda=1/K$  corresponds to the extreme case `maximal smoothing' (i.e. equal 
 variances $\sigma^2=\sigma^2_k$.), while $\lambda = 1$ means that all standard deviations are calculated within the
-    components (i.e. unequal variances).   Statistically sensible settings are only
+    components (i.e. unequal variances $\sigma^2_k$).   Statistically sensible settings are only
     $1/K \le  \lambda  \le 1$.  The default setting $\lambda= 0$ is automatically mapped to 
 $\lambda =1/K$.  
 
@@ -317,10 +317,9 @@ This can indeed be the case.  Using  8 instead of 4  mass points in the call abo
 
 \vspace{0.3cm}
 {\tt 
-\noindent Error in glm.fit(x = XZ, y = Y, weights = as.vector(w) * pweights, family = family,  : \\
-\indent        NAs in V(mu)\\
-\noindent Error in alldist(v1000 ~ 1, random = ~1, random.distribution = "np", k = 8,  : \\
-\indent        Singularity or Likelihood-Spike at iteration \#11. Enable spike protection or smooth among components.\\
+\noindent  Error in alldist(v1000 ~ 1, random = ~1, k = 8, tol = 0.5, data = gal,  :\\
+\indent    Singularity or Likelihood-Spike at iteration \#12.  \\
+\indent\indent     Check model specification,  enable spike protection or smooth among components.  \\
 }
 
 
@@ -333,7 +332,7 @@ This can indeed be the case.  Using  8 instead of 4  mass points in the call abo
 This problem may be solved,  as a first attempt, by modifying {\tt tol}. In this case, {\tt tol=0.32} 
 gives a likelihood-spike free solution with disparity  357.8, which is a good part better then the value given in Aitkin (2001), 361.0. 
 If likelihood spikes occur for any {\tt tol}, one can enable the spike protection ({\tt spike.protect=1}), which stops the algorithm as soon
-as one component starts to enter a likelihood spike.  for instance, running
+as one component starts to enter a likelihood spike.  For instance, running
 
 %13
 \begin{Scode}
@@ -417,7 +416,7 @@ and are consequently equal up to an additive constant (the double saturated like
  %18
 \begin{Scode}
 (faults.np2<- alldist(y ~ x, family=poisson(link=log), random=~1, data= fabric,k=2, random.distribution="np")) 
-(faults.np3<- alldist(y ~ x, family=poisson(link=log), random=~1, data= fabric,k=3, random.distribution="np",verbose=F)) 
+(faults.np3<- alldist(y ~ x, family=poisson(link=log), random=~1, data= fabric,k=3, random.distribution="np",verbose=FALSE)) 
 \end{Scode}
 The disparities are not far from those obtained with Gaussian quadrature, indicating that the random effect distribution is 
 not very far from a normal distribution.  While three mass points seem to be adequate for GQ, only two mass points are needed with NPML.
@@ -466,12 +465,12 @@ in each of 34 cities in El Salvador with annual rainfall  {\tt x} in 1000 mm. Th
  differs from the GLIM 4 result $947.89$. The disparity for binomial models provided by GLIM 4 has to be interpreted as  $-2\log L+c$, where $c$ is some 
  additive constant only depending on the values of {\tt y } and {\tt n}, while the disparity given by this R implementation 
  is just $-2\log L$. 
- Adding rainfall as fixed effect, we fit a linear model
+ Adding rainfall as fixed effect, we fit a linear random effect model
  %24
  \begin{Scode}
  (toxo.npx<- alldist(cbind(Cases,Total-Cases)~x, random=~1, data=rainfall, k=3, family=binomial(link=logit)))
  \end{Scode}
-   The decrease in disparity compared to the constant model is 0.3 on 1df (and is 5.1 for a cubic model, on 3df). %for the linear model and 5.03 on 3df for the cubic model.
+   The decrease in disparity compared to the constant model is only 0.3 on 1df (and is 5.1 for a cubic model, on 3df). %for the linear model and 5.03 on 3df for the cubic model.
  We also try a random slope
  %25
  \begin{Scode}
@@ -482,11 +481,10 @@ in each of 34 cities in El Salvador with annual rainfall  {\tt x} in 1000 mm. Th
  
  For the simple constant model, the posteriori probabilities $w_{ik}$
   %26
-  \begin{Scode}
-   round(t(toxo.np$post.prob),digits=2)
-   plot(toxo.np, plot.opt=3)
+ \begin{Scode}
+  round(t(toxo.np$post.prob),digits=2)
  \end{Scode}
- show the allocation of the data to the mass points, indicating that actually only one observation (the 30th) 
+ show how the observations are allocated to the mass points, indicating that actually only one observation (the 30th) 
  represents the 3rd mass point. From the posteriori probabilites, one also obtains the empirical
  Bayes predictions
  $
@@ -508,7 +506,7 @@ or, even quicker,
 fitted(toxo.np)
 \end{Scode}
  which call function {\tt predict.glmmNPML} for an object of type {\tt glmmNPML}. 
- The predict function can also be used to obtain predictions for new input values, e.g. for the linear model:
+ The predict function can also be used to obtain predictions for new input values, e.g. for the linear random effect model:
 %29
  \begin{Scode}
 predict(toxo.npx,type="response",newdata=data.frame(x=2))
@@ -558,7 +556,7 @@ According to the theory on EM, this shouldn't happen. This phenomenon occurs as
  \[
  d_j= 1-(1-\mbox{\tt tol})^{\mbox{\tt damp.power*iter}+1}
  \]
- to a value bigger than one, where {\tt iter} is the number of iterations and $d_j$ is the multiplicative 
+ to a value bigger than one, where {\tt iter}$\equiv j$ is the number of iterations and $d_j$ is the multiplicative 
  constant adjusting the dispersion parameter (Einbeck \& Hinde, 2006). Another alternative is certainly to switch off damping
  (option {\tt damp=FALSE)} but then it will not work at all in some cases.
  
@@ -597,8 +595,16 @@ According to the theory on EM, this shouldn't happen. This phenomenon occurs as
  \begin{Scode}
  (Oxboys.g20 <- allvc(height~age,random=~1|boy,data=Oxboys,random.distribution='gq',k=20))
  \end{Scode}
- 
- For comparison, we fit NPML with seven (as suggested by Aitkin, Hinde \& Francis (2005), p. 495), and eight masspoints,  yielding
+This is no satisfactory solution since fitting the same data with function {\tt lmer} in R package {\bf lme4} gives a disparity of 940.6,  as pointed out by Einbeck, Hinde \& Darnell (2007). It turns out that a huge number of mass points $K \approx 500$ is needed in this example to get down to a similar disparity.  We have observed this phenomenon also at other occasions and it seems to occur only if the intra-class correlation (ICC), given by
+\[
+ ICC= \frac{\sigma_z^2}{\sigma_z^2+\sigma^2}
+\]
+is quite large. For example, for the model fitted above it is
+%35
+\begin{Scode}
+Oxboys.g20$rsdev^2/(Oxboys.g20$rsdev^2+ Oxboys.g20$sdev$sdev^2)
+\end{Scode}
+which is a very large value. We have not observed this problem for smaller ICCs, i.e. roughly $ICC \le 0.5$. Fortunately, the problem does not persist for NPML estimation. For illustration, we fit NPML with seven (as suggested by Aitkin, Hinde \& Francis (2005), p. 495), and eight masspoints,  yielding
 %35
  \begin{Scode}
  (Oxboys.np7 <- allvc(height~age,random=~1|boy,data=Oxboys,random.distribution='np',k=7))
@@ -629,7 +635,8 @@ According to the theory on EM, this shouldn't happen. This phenomenon occurs as
  
  
  \begin{minipage}{21cm}
- \begin{Scode}{fig=TRUE, echo=FALSE, height=4, width=5}
+%38 
+\begin{Scode}{fig=TRUE, echo=FALSE, height=4, width=5}
  plot(Oxboys.np8, plot.opt=2)
  \end{Scode}
  
@@ -643,24 +650,26 @@ According to the theory on EM, this shouldn't happen. This phenomenon occurs as
  
  
  The data considered here, available in the package {\bf npmlreg} via
- %38
+ %39
  \begin{Scode}
  data(irlsuicide)
  \end{Scode}
  describe the mortality due to suicide and intentional self-harm in the Republic of Ireland from 1989--1998.  
  Suicide rates are modelled using 
-either the average crude rate or the relative risk as model parameter. The analysis of these data involves  
-a variance component model with regions as cluster variable, categorical covariates for gender and age, interaction terms, 
- a spatial autocorrelation term, and an offset. Thereby the spatial information for each region is included 
+either the average crude rate or the relative risk as model parameter. The analysis of these data involves  a variance component model 
+with regions as cluster variable, categorical covariates for gender and age, interaction terms, 
+  and an offset representing the cluster sizes. The R code can be found in the {\tt Examples} section of the help file for {\tt allvc} (page 8 in the reference manual). 
+While the random effect accounts for within-region correlation, it is worthwile to consider between-region correlation in this application.
+Spatial correlation between regions is included 
  into the model by employing  an extra - fixed or random - covariate representing the average crude 
  suicide rates from the neighboring regions (or the average neighboring 
- standard mortality ratios, respectively). For details, see Sofroniou, Einbeck and Hinde (2006)
-  or the example in the helpfile for {\tt allvc}.
+ standard mortality ratios, respectively). For details, see Sofroniou, Einbeck and Hinde (2006).
  
  
  \section{Citation}
 
 The correct citation for R package {\bf npmlreg} can be queried with
+%40
 \begin{Scode}
 citation(package="npmlreg")
 \end{Scode}
@@ -671,9 +680,9 @@ citation(package="npmlreg")
  
 \noindent
 \begin{description}
-\item[EINBECK, J. and HINDE, J.] (2006). Nonparametric maximum
+\item[EINBECK, J. and HINDE, J.] (2007). Nonparametric maximum
      likelihood estimation for random effect models in R. Vignette to R
-     package  `npmlreg'.
+     package  {\bf npmlreg} version 0.43.
 \end{description} 
  
 \section*{Acknowledgments}
@@ -706,20 +715,22 @@ Bayesian analysis of mixtures. {\em Statistical Modelling} {\bf
 {\em Statistical Modelling in GLIM 4} (2nd edition). Oxford, UK.  
 \item[EINBECK, J. and HINDE, J.] (2006).
 A note on NPML estimation for exponential family regression models with unspecified dispersion parameter.
-{\em Austrian Journal of Statistics} {\bf 35}, 233-243. 
+{\em Austrian Journal of Statistics} {\bf 35}, 233--243. 
+\item[EINBECK, J., HINDE, J. and DARNELL, R.] (2007).
+A new package for fitting random effect models -- The npmlreg package.  {\em R News} {\bf 7}, 26--30. 
 \item[EFRON, B.] (1986). Double exponential families and their use in generalized linear regression.
 {\em JASA} {\bf 81}, 709--721.
 \item[GOLDSTEIN, H.] (2003). {\em  Multilevel statistical models} (3rd edition). Arnold, London, UK.
 \item[HINDE, J. ] (1982).
 Compound Poisson Regression Models.
-{\em Lecture Notes in Statistics} {\bf 14},109--121.
+{\em Lecture Notes in Statistics} {\bf 14}, 109--121.
 \item[LAIRD, N. M. ] (1978). Nonparametric maximum likelihood estimation of a mixing distribution. {\em JASA}, {\bf 73}, 805--811.
 \item[POSTMAN, M., HUCHRA, J. P. and GELLER, M. J.] (1986). Probes of large-scale structures 
 in the Corona Borealis region. {\em Astronomical Journal} {\bf 92},1238--1247.
 \item[ROSNER, B.] (2000). {\em Fundamentals of
 Biostatistics.} Thomson Learning, Duxbury, CA, USA.
 \item[SOFRONIOU, N., EINBECK, J. and HINDE, J.] (2006). Analyzing Irish Suicide Rate with Mixture Models.
- In {\em Proceedings of the 21st International Workshop on Statistical Modelling, 3-7/07/06, Galway, Ireland.}
+ In {\em Proceedings of the 21st International Workshop on Statistical Modelling, 3-7/07/06, Galway, Ireland}, 474--481.
 \end{description}
 \newpage
 
@@ -730,16 +741,10 @@ Biostatistics.} Thomson Learning, Duxbury, CA, USA.
 
 \section{Appendix: R Documentation}
 
-The help files can be found at 
+A printed version of the help files is available in the reference manual, which can be downloaded from CRAN at
 
 \begin{center}
-{\tt http://www.nuigalway.ie/maths/jh/npmlreg/html/00Index.html}
-\end{center}
-
-\noindent or in the {\bf npmlreg} Manual which can be downloaded in PDF format from
-
-\begin{center}
-{\tt http://www.nuigalway.ie/maths/jh/npml.html} .
+{\tt http://cran.r-project.org/src/contrib/Descriptions/npmlreg.html}.
 \end{center}
 
 A list of all functions currently availabe in {\bf npmlreg} is given below:

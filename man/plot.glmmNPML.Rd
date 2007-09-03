@@ -13,8 +13,8 @@
     to analyze these objects. 
 }
 \usage{
-plot.glmmNPML(x, plot.opt = 15, noformat=FALSE, ...)
-plot.glmmGQ(x, plot.opt = 3, noformat=FALSE, ...)
+\method{plot}{glmmNPML}(x, plot.opt = 15, noformat=FALSE, ...)
+\method{plot}{glmmGQ}(x, plot.opt = 3, noformat=FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -26,7 +26,7 @@ plot.glmmGQ(x, plot.opt = 3, noformat=FALSE, ...)
     generic \code{plot()}- function.)  }
 }
 \details{
-  See the help pages to alldist and the vignette (Einbeck & Hinde, 2006). 
+  See the help pages to alldist and the vignette (Einbeck & Hinde, 2007). 
   It is sufficient to write \code{plot} instead of \code{plot.glmmNPML} or \code{plot.glmmGQ},
    since the generic \code{plot} function provided in \R automatically selects the right model class. 
 }
@@ -55,7 +55,7 @@ and both plots for \code{plot.opt=3}.
 \references{
 Aitkin, M. (1996a). A general maximum likelihood analysis of overdispersion in generalized linear models. Statistics and Computing 6, 251-262. 
 
-Einbeck, J., and Hinde, J. (2006). Nonparametric maximum likelihood estimation for random effect models in R. Vignette to R package  \pkg{npmlreg}. 
+Einbeck, J., and Hinde, J. (2007). Nonparametric maximum likelihood estimation for random effect models in R. Vignette to R package  \pkg{npmlreg}. 
 Type \code{vignette("npmlreg-v")} to open it.
 
 Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistics 14, 109-121. 
@@ -63,7 +63,7 @@ Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistic
 
 
  }
-\author{ Jochen Einbeck and John Hinde (2006) }
+\author{ Jochen Einbeck and John Hinde (2007) }
 \seealso{ 
 \code{\link{alldist}}, \code{\link{allvc}}  
 }

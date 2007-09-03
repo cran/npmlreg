@@ -174,12 +174,13 @@ The function alldist produces an object of class \code{glmmNPML}
   \item{mass.points}{the fitted mass points.}
   \item{masses}{the mixture probabilities corresponding to the mass points.}
   \item{sdev}{a list of the two elements \code{sdev$sdev} and \code{sdev$sdevk}. 
-    The former is the (overall)  standard deviation of a Gaussian mixture (identical 
-    to the value \code{MLE of sigma} provided in the summary), and the latter 
+    The former is the estimated standard deviation of the
+    Gaussian mixture components (estimated over all mixture components), and the latter 
     gives the unequal or smooth component-specific standard deviations. 
     All values are equal if \code{lambda=0}.}
   \item{shape}{a list of the two elements \code{shape$shape} and \code{shape$shapek}, 
     to be interpreted in analogy to sdev.}
+  \item{rsdev}{estimated random effect standard deviation.}
   \item{post.prob}{a matrix of posteriori probabilities.}
   \item{post.int}{a vector of `posteriori intercepts' (as in Sofroniou et al. (2006)).}
   \item{ebp}{the empirical Bayes Predictions on the scale of the linear predictor. 
