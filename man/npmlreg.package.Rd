@@ -14,8 +14,8 @@ Nonparametric maximum likelihood estimation or Gaussian quadrature
 \tabular{ll}{
 Package: \tab npmlreg\cr
 Type: \tab Package\cr
-Version: \tab 0.43\cr
-Date: \tab 2007-09-03\cr
+Version: \tab 0.44\cr
+Date: \tab 2007-09-30\cr
 License: \tab GPL version 2 or newer\cr
 }
 
@@ -36,7 +36,7 @@ Fifth Floor, Boston, MA  02110-1301, USA.
 }
 
 \author{
-Jochen Einbeck, Ross Darnell and John Hinde (2007).
+Jochen Einbeck, Ross Darnell and John Hinde.
 
 Maintainer: Jochen Einbeck <jochen.einbeck@durham.ac.uk>
 }
@@ -56,7 +56,7 @@ Foundation Ireland Basic Research Grant 04/BR/M0051.
 Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. 
 Second Edition, Oxford Statistical Science Series, Oxford, UK. 
 
-Einbeck, J., and Hinde, J. (2007). Nonparametric maximum likelihood estimation
+Einbeck, J., and Hinde, J.: Nonparametric maximum likelihood estimation
  for random effect models in \R. Vignette to \R package  \pkg{npmlreg}. 
 Type \code{vignette("npmlreg-v")} to open it. 
 

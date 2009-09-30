@@ -46,6 +46,6 @@ Townsend, T.R., Shapiro, M., Rosner, B., & Kass, E. H. (1979). Use of antimicrob
 }
 \examples{
 data(hosp)
-glm(duration~age+temp1+wbc1, data=hosp)
+glm1<- glm(duration~age+temp1+wbc1, data=hosp, family=Gamma(link=log))
 }
 \keyword{datasets}

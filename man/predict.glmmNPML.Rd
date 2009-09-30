@@ -48,7 +48,7 @@ See Aitkin et al. (2005), p. 459, for the formula. This method is only
   expression for the marginal mean of the responses exists.  
 }
 It is sufficient to write \code{predict} instead of \code{predict.glmmNPML} or 
-\code{predict.glmmGQ}, since the generic predict function provided in \R{} automatically selects the right 
+\code{predict.glmmGQ}, since the generic predict function provided in \R automatically selects the right 
  model class.
 
 }
@@ -94,7 +94,7 @@ Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistic
     # by a  parameter transformation.
 
 # Fabric faults data:
-    data(fabric, package="gamlss")
+    data(fabric)
     names(fabric) 
     # [1] "leng" "y"    "x"    
     faults.g2<- alldist(y ~ x, family=poisson(link=log), random=~1, 

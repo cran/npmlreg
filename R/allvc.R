@@ -79,18 +79,16 @@ function(formula,
   data$offset <- numeric(1); data$pweights<-numeric(1)  
   data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] # omit missing values   
   data$offset <- offset;  data$pweights <- weights
-  
+ 
   # Extract variable names from random part 
   rform    <- random
-  mform    <-  strsplit(as.character(random)[2],'\\|')[[1]]
+  mform    <- strsplit(as.character(random)[2],'\\|')[[1]]
   mform    <- gsub(' ', '',mform)
   if (length(mform)==1){stop("Please use function alldist for overdispersion models")} 
   mform1   <- mform[1]
   mform2   <- mform[2]
   if(!(mform2 %in% names(data))){stop("The specified clustering variable is not contained in the data frame.")}  
-  # rlevels  <- factor(data[,mform2])  #11-08-06
-  # group    <- factor(levels(rlevels))#20-04-06 
-  # postgroup <- data[,mform2]
+  if (random.distribution=='gq' && mform1!="1"){stop("Random coefficient models are only supported for random.distribution='np'.")}
   
   # initial fit and simple glm for k=1
   fit    <- glm(formula, family=family, weights=pweights, offset=offset, data=data,...)
@@ -210,11 +208,14 @@ function(formula,
           random <- formula(paste('~ MASS + ', paste(mform1, 'MASS',sep=":",collapse='+'), '-1',sep=''))
       }
   } else {
+     print(mform)
       # Gaussian random effects
       X <- model.matrix(formula,datak)
-      if (mform1=='1') random <- formula('~ z - 1') else
-      random <- formula(paste('~',paste(mform1,'z - 1',sep=':'),sep='')) ##R.E.D. 13/2/06
-  }
+      #if (mform1=='1')
+      random <- formula('~ z - 1')
+      #else
+      #random <- formula(paste('~',paste(mform1,'z - 1',sep=':'),sep='')) ##R.E.D. 13/2/06 # this case seems to be excluded anyway. 05/11/07 JE
+   }
   Z <- model.matrix(random,datak)
   if (dim(X)[1]!= dim(Z)[1]){cat("The missing value routine cannot cope with this model. Please specify the random term also as fixed term and try again. ")}
   XZ <- cbind(X,Z)
@@ -228,7 +229,15 @@ function(formula,
   nf        <- length(names(fit$effects))
 
   # Extend linear predictor
-  if (missing(pluginz)){sz<-tol* sdev*z} else {sz<-rep(pluginz-fit$coef[[1]],rep(N,k))}
+  if (missing(pluginz)){
+      sz <- tol* sdev*z
+  } else {
+      if (length(pluginz)!=k){
+        stop("pluginz needs to be a vector of length k.")  # 30/09/09
+      } else {
+        sz <- rep(pluginz-fit$coef[[1]],rep(N,k))
+      }
+  }  
   Eta <- fit$linear.predictor + sz
         # The extra term stops unrelated regressions
   
@@ -482,6 +491,7 @@ function(formula,
       class(fit) <-'glmmNPML'
   } else {
       # glmmGQ output
+      
       fit <- c( fit[1],
                 residuals = list(ebp.residuals),
                 fitted.values = list(ebp.fitted),

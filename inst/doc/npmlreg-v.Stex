@@ -21,7 +21,7 @@
 %  in R:
 %  Stangle("npmlreg.Stex")
 %\VignetteIndexEntry{NPML estimation for random effect models in R} 
-%\VignetteDepends{npmlreg, MASS, gamlss, forward, nlme}
+%\VignetteDepends{npmlreg, MASS, forward, nlme}
 %\VignetteKeyword{NPML}
 
 
@@ -377,7 +377,7 @@ This data describes the number of faults in rolls of fabrics with a single covar
 The number of faults {\tt y}  can be assumed to follow a Poisson distribution. First, we fit a generalized linear Poisson model with the natural log link
 %15
 \begin{Scode}
-data(fabric, package="gamlss")
+data(fabric)
 (faults0 <- glm(y ~ 1, family=poisson(link=log),data=fabric))
 (faults1 <- glm(y ~ x, family=poisson(link=log),data=fabric)) 
 \end{Scode}
@@ -680,9 +680,9 @@ citation(package="npmlreg")
  
 \noindent
 \begin{description}
-\item[EINBECK, J. and HINDE, J.] (2007). Nonparametric maximum
+\item[EINBECK, J. and HINDE, J.] (2009). Nonparametric maximum
      likelihood estimation for random effect models in R. Vignette to R
-     package  {\bf npmlreg} version 0.43.
+     package  {\bf npmlreg} version 0.44.
 \end{description} 
  
 \section*{Acknowledgments}
@@ -754,6 +754,6 @@ A list of all functions currently availabe in {\bf npmlreg} is given below:
 ls("package:npmlreg")
 \end{Scode}
 
-In addition, the data sets \texttt{irlsucide}, \texttt{hosp}, and \texttt{missouri} are available.
+In addition, the data sets \texttt{fabric}, \texttt{irlsucide}, \texttt{hosp}, and \texttt{missouri} are available.
 \end{landscape}
 \end{document}

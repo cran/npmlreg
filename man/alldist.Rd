@@ -59,7 +59,11 @@ allvc(formula,
 \arguments{
   \item{formula}{a formula defining the response and the fixed effects (e.g. \code{y ~ x}).   }
   \item{random}{a formula defining the random model. In the case of \code{alldist},  set \code{random = ~1} to model overdispersion, and for instance \code{random = ~x} to introcude a random coeffcient \code{x}.  
-    In the case of \code{allvc},  set \code{random=~1|PSU} to model overdispersion on the upper level, where PSU is a \bold{factor} for the primary sampling units, e.g. groups, clusters, classes, or individuals in longitudinal data, and define random coefficents accordingly.}
+    In the case of \code{allvc},  set \code{random=~1|PSU} to model
+    overdispersion on the upper level, where PSU is a \bold{factor} for
+    the primary sampling units, e.g. groups, clusters, classes, or
+    individuals in longitudinal data, and define random coefficents
+    accordingly.}
   \item{family}{conditional distribution of responses. "gaussian", "poisson", "binomial", or "Gamma" can be set. If "gaussian" or "Gamma", then equal component dispersion parameters are assumed, except if the optional parameter lambda is modified.   }
   \item{data}{the data frame (mandatory, even if it is attached to the workspace!). }
   \item{k}{the number of mass points/integration points 
@@ -82,7 +86,7 @@ allvc(formula,
   while \code{lambda=1} means 'no smoothing' (unequal disp. param.)}
   \item{damp}{switches EM damping on or off.   }
   \item{damp.power}{steers degree of damping applied on dispersion parameter according 
-  to formula \code{1-(1-tol)^(damp.power*iter+1)}, see Einbeck & Hinde (2005).  }
+  to formula \code{1-(1-tol)^(damp.power*iter+1)}, see Einbeck & Hinde (2006).  }
   \item{spike.protect}{protects algorithm to converge into likelihood spikes for 
     Gaussian and Gamma mixtures with unequal or smooth component standard deviations,  
     by stopping the EM algorithm if one of the component standard deviations 
@@ -131,36 +135,48 @@ allvc(formula,
 
   Fitting random coefficient models (Aitkin, Francis & Hinde, 2005, pp. 474, p. 491) is 
   possible by specifying the random term explicitly. Note that the setting 
-  \code{random= ~ x} gives a model with a random slope and a random intercept,
-  that only one random coefficient can be specified, and that the option
-   \code{random.distribution} is restricted to \code{np} in this case. 
+  \code{random= ~ x} gives a model with a random slope and a random
+  intercept, and 
+  that only one random coefficient can be specified. The option
+   \code{random.distribution} is restricted to \code{np} in this case,
+  i.e. Gaussian Quadrature is not supported for random coefficient
+  models (see also Aitkin, Francis & Hinde (2005), page 475 bottom).
 
+  As for \code{glm}, there are three different ways of specifying a
+  binomial model, namley through
+\itemize{
+  \item a two-column matrix before the `~` symbol, specifying the counts of
+  successes and non-successes.
+  \item a vector of proportions of successes before the '~' symbol, and the
+  associated number of trials provided in the \code{weights} argument.
+  \item a two-level factor  before the `~` symbol (only for Bernoulli-response).
+}
   The weights have to be understood as frequency weights, i.e. setting all weights in 
   \code{alldist} equal to 2 will duplicate each data point and hence double the 
   disparity and deviance.  
 
-  For \code{k} \eqn{\ge 70}{>= 70}, mass points with negligible mass
-  (i.e. < 1e-55) are omitted.  The maximum number of 'real' mass points
-  is then 240.
+  For \code{k} \eqn{\ge 54}{>= 54}, mass points with negligible mass
+  (i.e. < 1e-50) are omitted.  The maximum number of 'effective' mass points
+  is then 198.
   
 }
 \value{
 
 The function alldist produces an object of class \code{glmmNPML} 
-(if \code{random.distributon} is set to \code{np})  or \code{glmmGQ} 
-(\code{gq}).  Both objects contain the following 29 components: 
+(if \code{random.distributon} is set to `np')  or \code{glmmGQ} 
+(`gq').  Both objects contain the following 29 components: 
 
   \item{coefficients}{a named vector of coefficients (including the mass points). 
     In case of Gaussian quadrature, the coefficient given at \code{z}  
     corresponds to the standard deviation of the mixing distribution. }
-  \item{residuals}{the difference between the true response and the emprical Bayes predictions.}
+  \item{residuals}{the difference between the true response and the empirical Bayes predictions.}
   \item{fitted.values}{the empirical Bayes predictions (Aitkin, 1996b) on the scale of the responses.}
   \item{family}{the `family' object used.}
   \item{linear.predictors}{the extended linear predictors \eqn{\hat{\eta}_{ik}}{eta_ik}. }
   \item{disparity}{the disparity (\code{-2logL}) of the fitted mixture regression model.}
   \item{deviance}{the deviance of the fitted mixture regression model.}
-  \item{null.deviance}{The deviance for the null model (just containing an intercept), comparable with
-          `deviance'.}
+  \item{null.deviance}{the deviance for the null model (just containing an intercept), comparable with
+          \code{deviance}.}
   \item{df.residual}{the residual degrees of freedom of the fitted model (including the random part).}
   \item{df.null}{the residual degrees of freedom for the null model.}
   \item{y}{the (extended) response vector.}
@@ -287,7 +303,7 @@ In contrast to the GLIM 4 version, this \R implementation
   toxo.np3x<-update(toxo.np3, .~.-x2-x3, random = ~x)
 
 # The fabric faults data
-  data(fabric, package="gamlss")
+  data(fabric)
   coefficients(alldist(y ~ x, random=~1, family=poisson(link=log), 
       random.distribution="gq", data= fabric, k=3, verbose=FALSE))
   #(Intercept)           x           z 

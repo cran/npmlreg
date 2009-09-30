@@ -44,7 +44,8 @@
   if (k>1 && random.distribution=='np' && max(length(grep('- 1', deparse(formula(mf)))),length(grep('-1', deparse(formula(mf))))) >0 ){
       stop(" term '-1'  in model formula not supported for k>1 & random.distribution='np'. ")
   }
-  
+
+ 
   # Test for incorrect offset specification in formula object
   testoffset<-try(is.null(attr(terms(formula(mf)),"offset")),silent=TRUE)
   if (!(class(testoffset)=="try-error" || testoffset)){
@@ -80,12 +81,15 @@
   data$offset <- numeric(1); data$pweights<-numeric(1)
   data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] # omit missing values   
   data$offset<-offset;  data$pweights<-weights
-  
+
+   
   # Extract variable names from random part 
   rform   <- random
   mform   <- strsplit(as.character(random)[2],'\\|')[[1]]
   mform   <- gsub(' ', '',mform)
-  if (length(mform)==2){stop("Please use function allvc for two-level models")} 
+  if (length(mform)==2){stop("Please use function allvc for two-level models")}
+  if (random.distribution=='gq' && mform!="1"){stop("Random coefficient models are only supported for random.distribution='np'.")}
+  
   
   # Initial fit and simple glm for k=1
   fit    <- glm(formula, family=family, weights=pweights, offset=offset, data=data,...)
@@ -194,24 +198,35 @@
       # Nonparametric random effect
       X <- model.matrix(formula,datak)[,-1,drop=FALSE]   
       datak$MASS <- gl(k,N) 
-      if (mform=='1') random <- formula(~MASS-1) else {  
+      if (mform=='1') {
+        random <- formula(~MASS-1)
+      } else {  
           # Nonparametric random coefficient
           random <- formula(paste('~ MASS + ',paste(mform,'MASS',sep=":",collapse='+'), '-1',sep=''))    
       }
   } else {
       X <- model.matrix(formula,datak)
-      if (mform=='1') {
-          random <- formula(~ z - 1 )
-      } else { 
-          stop("random coefficients only allowed with option 'np'")
-      }
+      #if (mform=='1') {
+      random <- formula(~ z - 1 )
+      #} else { 
+      #    stop("Random coefficients only supported with option random.distribution='np'")
+      #} # 05/11/07
   }
   Z <- model.matrix(random,datak)
   if (dim(X)[1]!= dim(Z)[1]){ cat("The missing value routine cannot cope with this model. Please specify the random term also as fixed term and try again. " )}
   XZ <- cbind(X,Z)
   
   # Extend the linear predictor:
-  if (missing(pluginz)){sz<-tol* sdev*z} else {sz<-rep(pluginz-fit$coef[[1]],rep(N,k))}
+  if (missing(pluginz)){
+      sz <- tol* sdev*z
+  } else {
+      if (length(pluginz)!=k){
+        stop("pluginz needs to be a vector of length k.")  #30/09/09
+      } else {
+        sz <- rep(pluginz-fit$coef[[1]],rep(N,k))
+      }
+  }      
+          
   Eta <- fit$linear.predictor + sz
            # The extra term stops unrelated regressions
            
