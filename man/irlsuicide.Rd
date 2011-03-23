@@ -10,7 +10,7 @@
   A data frame with 104 observations on the following 8 variables.
   \describe{
     \item{\code{Region}}{a factor with levels \code{Cork }, \code{Dublin }, \code{EHB - Dub.}, \code{Galway}, \code{Lim.}, \code{Mid HB}, \code{MWHB-Lim.}, \code{NEHB}, \code{NWHB}, \code{SEHB-Wat.}, \code{SHB-Cork}, \code{Waterf.}, \code{WHB-Gal.}.}
-    \item{\code{ID}}{a factor with levels \code{1} \code{2} \code{3} \code{4} \code{5} \code{6} \code{7} \code{8} \code{9} \code{10} \code{11} \code{12} \code{13} correspomnding to Regions.}
+    \item{\code{ID}}{a factor with levels \code{1} \code{2} \code{3} \code{4} \code{5} \code{6} \code{7} \code{8} \code{9} \code{10} \code{11} \code{12} \code{13} corresponding to Regions.}
     \item{\code{pop}}{a numeric vector giving the population sizes (estimated for 1994).}
     \item{\code{death}}{a numeric vector giving the total number of deaths.}
     \item{\code{sex}}{a factor for gender with levels \code{0} (female) and \code{1} (male).}

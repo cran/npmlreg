@@ -81,7 +81,6 @@
   data$offset <- numeric(1); data$pweights<-numeric(1)
   data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] # omit missing values   
   data$offset<-offset;  data$pweights<-weights
-
    
   # Extract variable names from random part 
   rform   <- random
@@ -125,7 +124,7 @@
         sdev  <- 1
         shape <- 0
   } 
- 
+  
   # Initial disparity (-2logL)
   ML.dev0 <- -2*sum(data$pweights*switch(family$family,
                 "gaussian"= dnorm(fit$y, fitted(fit), sdev, log=TRUE),
@@ -444,7 +443,7 @@
                         if (mform=='1'){ points(rep(iter-1,length(R)),R)}}
             if (verbose){ cat("EM Trajectories plotted.\n")}
       }
-                 
+      
       # glmmNPML output    
       fit <- c( fit[1],
                 residuals = list(ebp.residuals),

@@ -139,7 +139,8 @@ function(formula,
         names(fit$coefficients) <- ifelse(names(fit$coefficients)=="(Intercept)", "MASS1", names(fit$coefficients))
       }
       post.prob <-  matrix(1,N,1,dimnames=list(names0,"") )
-      
+    
+     # print(fit)  
       fit <- c( fit[c(1,2,3,8,9)],
               disparity = ML.dev0,
               deviance = fit$dev,

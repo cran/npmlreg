@@ -36,7 +36,7 @@
 }   
 
 \section{Warnings}{
-Don't confuse with the Barcelona 'Hospital stay data' \code{aep} in package \pkg{gamlss}. 
+Don't confuse with the Barcelona 'Hospital stay data' \code{aep}  in package \pkg{gamlss}. 
 }
 
 \references{

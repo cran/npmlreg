@@ -14,8 +14,6 @@ Nonparametric maximum likelihood estimation or Gaussian quadrature
 \tabular{ll}{
 Package: \tab npmlreg\cr
 Type: \tab Package\cr
-Version: \tab 0.44\cr
-Date: \tab 2007-09-30\cr
 License: \tab GPL version 2 or newer\cr
 }
 

@@ -286,7 +286,7 @@ In contrast to the GLIM 4 version, this \R implementation
   galaxy.np8u <- alldist(galaxies/1000~1, random=~1, random.distribution="np", 
       data=gal, k=8, lambda=0.99)
   round(galaxy.np8u$sdev$sdevk, digits=3)
-  #[1] 0.906 0.435 0.218 0.676 1.205 0.216 0.412 0.295
+  # [1] 0.906 0.435 0.218 0.676 1.205 0.216 0.412 0.295
 
 # The toxoplasmosis data 
   data(rainfall, package="forward")
@@ -296,36 +296,36 @@ In contrast to the GLIM 4 version, this \R implementation
       random.distribution="np", family=binomial(link=logit), data=rainfall, k=3)
   toxo.np3x<- alldist(cbind(Cases,Total-Cases) ~ x, random=~x, 
       random.distribution="np", family=binomial(link=logit), data=rainfall, k=3)
-  #is the same as 
+  # is the same as 
   toxo.np3x<- alldist(Cases/Total ~ x, random = ~x, weights=Total, 
       family=binomial(link=logit), data=rainfall, k=3)
-  #or
+  # or
   toxo.np3x<-update(toxo.np3, .~.-x2-x3, random = ~x)
 
 # The fabric faults data
   data(fabric)
   coefficients(alldist(y ~ x, random=~1, family=poisson(link=log), 
       random.distribution="gq", data= fabric, k=3, verbose=FALSE))
-  #(Intercept)           x           z 
-  # -3.3088663   0.8488060   0.3574909
+  # (Intercept)           x           z 
+  #  -3.3088663   0.8488060   0.3574909
   
 # The Pennsylvanian hospital stay data
   data(hosp)
   fitnp3<-  alldist(duration~age+temp1, data=hosp, k=3, family=Gamma(link=log),
       tol=0.5) 
   fitnp3$shape$shape
-  #[1] 50.75232
+  # [1] 50.75232
   fitnp3<-  alldist(duration~age+temp1, data=hosp, k=3, family=Gamma(link=log),
       tol=0.5, lambda=0.9) 
   fitnp3$shape$shapek
-  #[1]  49.03108  42.79532 126.64046 
+  # [1]  49.03108  42.79532 126.64046 
   
 # The Oxford boys data
   data(Oxboys, package="nlme")
   Oxboys$boy <- gl(26,9)
   allvc(height~age, random=~1|boy, data=Oxboys, random.distribution='gq', k=20)
   allvc(height~age, random=~1|boy, data=Oxboys,random.distribution='np',k=8) 
-  #with random coefficients:
+  # with random coefficients:
   allvc(height~age,random=~age|boy, data=Oxboys, random.distribution='np', k=8)
     
 # Irish suicide data

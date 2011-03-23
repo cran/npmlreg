@@ -78,8 +78,8 @@ function(formula,
   if (is.null(offset)){offset  <-rep(0,N) }
   if (is.null(weights)){weights<-rep(1,N)}   
   data$poffset <- numeric(1); data$pweights<-numeric(1)
-  data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] #omit missing values   
-  data$poffset<-offset;  data$pweights<-weights
+  data  <- if (is.matrix(Y)) data[dimnames(Y)[[1]],] else  data[names(Y),] # omit missing values   
+  poffset<-data$poffset<-offset;  pweights<-data$pweights<-weights # global binding only to avoid R CMD Note.
   
   all.Disparities <- all.converged <- rep(0,steps)
   min.Disp        <- min.Disp.conv <- 10^8
