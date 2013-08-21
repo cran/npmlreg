@@ -2,17 +2,19 @@ Package: npmlreg
 Type: Package
 Title: Nonparametric maximum likelihood estimation for random effect
         models
-Version: 0.45-1
-Date: 2011-03-23
+Version: 0.45-2
+Date: 2013-08-21
 Author: Jochen Einbeck, Ross Darnell and John Hinde
 Maintainer: Jochen Einbeck <jochen.einbeck@durham.ac.uk>
-Depends: R (>= 1.9), statmod
+Depends: R (>= 1.9)
+Imports: statmod
 Suggests: MASS, forward, nlme, lattice
 LazyLoad: yes
 Description: Nonparametric maximum likelihood estimation or Gaussian
         quadrature for overdispersed generalized linear models and
         variance component models
 License: GPL (>= 2)
-Packaged: 2012-03-23 11:08:28 UTC; dma0je
+Packaged: 2013-08-21 10:57:38 UTC; dma0je
+NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2012-03-23 13:50:48
+Date/Publication: 2013-08-21 13:19:28

@@ -10,7 +10,7 @@ gqz <- function(numnodes=20, minweight=0.000001){
 #  be omitted.
 #  The default vale of minweight=0.000001 returns 14 masspoints for the
 #  default numnodes=20 as in Aitkin, Francis & Hinde (2005).
-    out <- gauss.quad(numnodes, "hermite")
+    out <- gauss.quad(numnodes, "hermite")  # from statmod
     h <- rbind(out$nodes*sqrt(2), out$weights/sum(out$weights))
 #  Sort the locations and weights into columns in decending order of the
 #  location vector.

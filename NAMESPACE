@@ -1,6 +1,7 @@
 
 import("stats")
 import("graphics")
+import("statmod")
 
 export(alldist, allvc, dkern,  gqz,
 post, tolfind, weightslogl.calc.w, expand, expand.vc, binomial.expand)

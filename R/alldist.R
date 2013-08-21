@@ -228,7 +228,9 @@
           
   Eta <- fit$linear.predictor + sz
            # The extra term stops unrelated regressions
-           
+
+  print(Eta)
+  
   # Initial EM trajectory values 
   if (random.distribution=="np"){
       tol<- max(min(tol,1),1-damp)  #For tol >  1 or damp=F no Damping
@@ -273,7 +275,7 @@
               Check model specification,  enable spike protection or smooth among components.")
       }
       
-      #EM Trajectories   
+      # EM Trajectories   
       if (random.distribution=="np"){   
           masspoint<- fit$coef[l0:(l0+k-1)]
           followmass<-rbind(followmass, masspoint)
@@ -344,7 +346,7 @@
           if (family$family=='Gamma' && abs(max(shapek/masspoint)) > 10^6*spike.protect){break}
       }  
   }###########################End of EM loop#############
- 
+
  
   # Print on screen information on EM convergence
   if (verbose){
@@ -443,6 +445,8 @@
                         if (mform=='1'){ points(rep(iter-1,length(R)),R)}}
             if (verbose){ cat("EM Trajectories plotted.\n")}
       }
+
+   
       
       # glmmNPML output    
       fit <- c( fit[1],

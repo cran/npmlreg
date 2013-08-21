@@ -58,11 +58,11 @@ allvc(formula,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{formula}{a formula defining the response and the fixed effects (e.g. \code{y ~ x}).   }
-  \item{random}{a formula defining the random model. In the case of \code{alldist},  set \code{random = ~1} to model overdispersion, and for instance \code{random = ~x} to introcude a random coeffcient \code{x}.  
+  \item{random}{a formula defining the random model. In the case of \code{alldist},  set \code{random = ~1} to model overdispersion, and for instance \code{random = ~x} to introcude a random coefficient \code{x}.  
     In the case of \code{allvc},  set \code{random=~1|PSU} to model
     overdispersion on the upper level, where PSU is a \bold{factor} for
     the primary sampling units, e.g. groups, clusters, classes, or
-    individuals in longitudinal data, and define random coefficents
+    individuals in longitudinal data, and define random coefficients
     accordingly.}
   \item{family}{conditional distribution of responses. "gaussian", "poisson", "binomial", or "Gamma" can be set. If "gaussian" or "Gamma", then equal component dispersion parameters are assumed, except if the optional parameter lambda is modified.   }
   \item{data}{the data frame (mandatory, even if it is attached to the workspace!). }

@@ -209,7 +209,7 @@ function(formula,
           random <- formula(paste('~ MASS + ', paste(mform1, 'MASS',sep=":",collapse='+'), '-1',sep=''))
       }
   } else {
-     print(mform)
+      #print(mform)
       # Gaussian random effects
       X <- model.matrix(formula,datak)
       #if (mform1=='1')
