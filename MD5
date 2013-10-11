@@ -1,6 +1,6 @@
-63f1f2a2d2ecfeb488013ff838514a30 *DESCRIPTION
+87986d250c1c5e1e462726000ecacdb1 *DESCRIPTION
 690805b1c0d46bdaf391744748506031 *NAMESPACE
-7fd597d4d997cdca49ac28397b199247 *R/alldist.R
+4cf90d3ad194c0fd6b131e877f2f92bd *R/alldist.R
 dbaab8dcc2923c0729ca0c6f8bbdf36c *R/allvc.R
 f687db368cd21870b562e0dd18f45ae5 *R/binomial.expand.R
 ee926f650619e59ad8d88e5715993544 *R/dkern.R
@@ -23,11 +23,12 @@ a502e7c173f5c593d1ae85a88fe081b2 *R/summary.glmmNPML.R
 adf738d9bba50c60a01b469cff5bfd96 *R/tolfind.R
 d7928655322798ba8e92e32df206246b *R/weightslogl.calc.w.R
 9585c47e575ca3241e385ed6fd891001 *data/fabric.rda
-166016ee9fd91617828d62839b98e449 *data/hosp.rda
-2982aee312d6b71957297fee3a9fda81 *data/irlsuicide.rda
-036f936fb4b6786a5fab5e37d9f3084b *data/missouri.rda
+e3ce563220703d7afc2c51949afaa609 *data/hosp.rda
+ce420842d246fe409a435c267bca8a29 *data/irlsuicide.rda
+ca9e35f1b9d527383ac11beac0182d5f *data/missouri.rda
+d43c64c3b156254c29f3f30e885951f0 *inst/doc/npmlreg-v.R
 e77ee13254b036ae5663fd8ec336f273 *inst/doc/npmlreg-v.Rtex
-f03f4e02b0f20d5d3a47e2ad4ea6231a *inst/doc/npmlreg-v.pdf
+02775e8942a2d0a0e7f80b15a5fd54c6 *inst/doc/npmlreg-v.pdf
 4ee419fe710d44ea3af522394800013f *man/alldist.Rd
 a82d6857983d530fd2b1b070f811d8d0 *man/dkern.Rd
 0c3db2f5850165d2844bd4e72aab800f *man/fabric.Rd

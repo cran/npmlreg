@@ -229,8 +229,6 @@
   Eta <- fit$linear.predictor + sz
            # The extra term stops unrelated regressions
 
-  print(Eta)
-  
   # Initial EM trajectory values 
   if (random.distribution=="np"){
       tol<- max(min(tol,1),1-damp)  #For tol >  1 or damp=F no Damping
@@ -517,3 +515,4 @@
   }
   fit
 }
+
