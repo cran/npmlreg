@@ -286,7 +286,7 @@ In contrast to the GLIM 4 version, this \R implementation
   galaxy.np8u <- alldist(galaxies/1000~1, random=~1, random.distribution="np", 
       data=gal, k=8, lambda=0.99)
   round(galaxy.np8u$sdev$sdevk, digits=3)
-  # [1] 0.906 0.435 0.218 0.676 1.205 0.216 0.412 0.295
+  # [1]  0.912 0.435 0.220 0.675 1.214 0.264 0.413 0.297
 
 # The toxoplasmosis data 
   data(rainfall, package="forward")
@@ -314,11 +314,11 @@ In contrast to the GLIM 4 version, this \R implementation
   fitnp3<-  alldist(duration~age+temp1, data=hosp, k=3, family=Gamma(link=log),
       tol=0.5) 
   fitnp3$shape$shape
-  # [1] 50.75232
+  # [1] 50.76636
   fitnp3<-  alldist(duration~age+temp1, data=hosp, k=3, family=Gamma(link=log),
       tol=0.5, lambda=0.9) 
   fitnp3$shape$shapek
-  # [1]  49.03108  42.79532 126.64046 
+  # [1]  49.03101  42.79522 126.64077
   
 # The Oxford boys data
   data(Oxboys, package="nlme")

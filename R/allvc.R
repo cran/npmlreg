@@ -53,6 +53,8 @@ function(formula,
   # Extract variables from call and set up initial (fixed effect) model
   m    <- match(c("formula", "data", "subset", "weights", "na.action", 
                "etastart", "mustart", "offset"), names(mf), 0)
+
+  
   mf   <- mf[c(1, m)]
   mf$drop.unused.levels <- TRUE
   mf[[1]] <- as.name("model.frame")
@@ -89,7 +91,8 @@ function(formula,
   mform2   <- mform[2]
   if(!(mform2 %in% names(data))){stop("The specified clustering variable is not contained in the data frame.")}  
   if (random.distribution=='gq' && mform1!="1"){stop("Random coefficient models are only supported for random.distribution='np'.")}
-  
+
+
   # initial fit and simple glm for k=1
   fit    <- glm(formula, family=family, weights=pweights, offset=offset, data=data,...)
   names0 <- dimnames(data)[[1]] 
@@ -190,9 +193,9 @@ function(formula,
   datak    <- expand.vc(data,k)
   kindex   <- rep(1:k,rep(N,k))# index for the mixtures
   #tmp      <- gqz(k,minweight=1e-55)  # omitted from version 0.39-1
-  z0       <- -tmp$l
-  z        <- rep(-tmp$l,rep(N,k))
-  p        <- tmp$w
+  z0       <- -tmp$location
+  z        <- rep(-tmp$location,rep(N,k))
+  p        <- tmp$weight
   group    <- factor(levels(factor(datak[,mform2])))# 20/04/06 
   offset   <- datak$offset    # expand offset
   pweights <- datak$pweights  # expand weights
@@ -511,7 +514,7 @@ function(formula,
                 weights = list(w0),
                 offset = list(off0), 
                 mass.points = list(mass.points),
-                masses = list(gqz(k0, minweight=1e-50)$w),          
+                masses = list(gqz(k0, minweight=1e-50)$weight),          
                 sdev = list(list(sdev=sdev, sdevk=sdevk)),
                 shape = list(list(shape=shape,shapek=shapek)),
                 rsdev = fit$coef[["z"]],

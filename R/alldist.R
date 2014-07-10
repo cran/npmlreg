@@ -186,9 +186,9 @@
   datak     <- expand(data,k)
   kindex    <- rep(1:k,rep(N,k))# index for the mixtures, for version 0.31 or higher only used for allvc 
   #tmp       <- gqz(k,minweight=1e-55)  # omitted from version 0.39-1
-  z0        <- -tmp$l
-  z         <- rep(-tmp$l,rep(N,k))
-  p         <- tmp$w
+  z0        <- -tmp$location
+  z         <- rep(-tmp$location,rep(N,k))
+  p         <- tmp$weight
   offset    <- datak$offset
   pweights  <- datak$pweights
 
@@ -499,7 +499,7 @@
                 weights = list(w0),
                 offset = list(off0), 
                 mass.points = list(mass.points),
-                masses = list(gqz(k0, minweight=1e-50)$w),          
+                masses = list(gqz(k0, minweight=1e-50)$weight),          
                 sdev = list(list(sdev=sdev, sdevk=sdevk)),
                 shape = list(list(shape=shape,shapek=shapek)),
                 rsdev = fit$coef[["z"]],
