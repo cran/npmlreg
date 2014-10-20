@@ -51,8 +51,8 @@ Foundation Ireland Basic Research Grant 04/BR/M0051.
 
 \references{
 
-Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. 
-Second Edition, Oxford Statistical Science Series, Oxford, UK. 
+Aitkin, M., Francis, B. and Hinde, J. (2009). Statistical Modelling in R. 
+Oxford Statistical Science Series, Oxford, UK. 
 
 Einbeck, J., and Hinde, J.: Nonparametric maximum likelihood estimation
  for random effect models in \R. Vignette to \R package  \pkg{npmlreg}. 

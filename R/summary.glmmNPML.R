@@ -1,6 +1,7 @@
 "summary.glmmNPML" <-
 function(object,digits=max(3,getOption('digits')-3), ...){
   np   <-  length(object$coefficients)
+  if (is.na(object$coef[length(object$coef)])){np<-np-1} ## Sep 2014
   if (np > 0){
       m <- seq(1,np)[substr(attr(object$coefficients,'names'),1,4)=='MASS']
       mass.points <- object$coefficients[m]

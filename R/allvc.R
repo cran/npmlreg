@@ -115,12 +115,13 @@ function(formula,
   if (family$family=="gaussian"){
         sdev  <-  ifelse(sdev.miss, sqrt(summary(fit)$dispersion), sdev)
         shape <- 0
-  } else if (family$family =="Gamma") {
+  } else if (family$family =="Gamma"||family$family =="inverse.gaussian") {
          # Estimate sdev from residuals on linear predictor scale, see Einbeck & Hinde (2006):
         sdev  <- ifelse(sdev.miss, sqrt(switch(family$link,
                         "log"= sum(data$pweights*(log(Y)-log(fitted(fit)))^2)/(sum(data$pweights)),
                         "inverse"= sum(data$pweights*(1/Y-1/(fitted(fit)))^2)/(sum(data$pweights)),
                         "identity"= sum(data$pweights*(Y-fitted(fit))^2)/(sum(data$pweights)),
+                         "1/mu^2"=   sum(data$pweights*(1/(Y^2)-1/(fitted(fit))^2)^2)/(sum(data$pweights)),                                          
                         )), sdev) 
         shape <- ifelse(shape.miss,1/summary(fit)$dispersion, shape)
   } else {
@@ -133,7 +134,8 @@ function(formula,
              "gaussian"= dnorm(fit$y, fitted(fit), sdev, log=TRUE),
              "poisson" = dpois(fit$y, fitted(fit), log=TRUE),
              "binomial"= dbinom(Y[,1],Y[,1]+Y[,2], fitted(fit), log=TRUE),
-             "Gamma"   = dgamma(fit$y, shape=shape, scale=fitted(fit)/shape, log=TRUE),             
+             "Gamma"   = dgamma(fit$y, shape=shape, scale=fitted(fit)/shape, log=TRUE),
+              "inverse.gaussian"= dinvgauss(fit$y,fitted(fit), shape=shape, log=TRUE),                
             ))
 
   # Return (glm) output and terminate if k=1
@@ -259,7 +261,15 @@ function(formula,
   }
 
   # Expanded fitted values
-  Mu <- family$linkinv(Eta) 
+  Mu <- family$linkinv(Eta)
+  if (sum(is.na(Mu))>0){
+     if (family$link=="1/mu^2"){                                                                      
+        warning("The squared reciprocal link will often fail. Try family=...(link=log) instead.")
+     }
+     stop("Unable to transform extended linear predictor to response scale.")
+   }  
+
+  
 
   # Calculate loglikelihood for fixed model
   f <- switch(family$family,
@@ -267,6 +277,7 @@ function(formula,
               "poisson" =dpois(Y,Mu,log=TRUE),
               "binomial"=dbinom(r,n,Mu,log=TRUE),
                "Gamma"=dgamma(Y,shape=shape/tol^2,scale=Mu*tol^2/shape ,log=TRUE),
+               "inverse.gaussian"= dinvgauss(Y, Mu, shape= shape/tol^2, log=TRUE),
                )
   
   # Calculate the weights from initial model
@@ -282,7 +293,7 @@ function(formula,
   sdevk<-rep(sdev,k);  shapek<-rep(shape,k)    #19-03-06
    
   ##########Start of EM ##########
-  while (iter <= EMmaxit && (!converged || (iter<=9 && random.distribution=='np' && damp && (family$family=="gaussian" && sdev.miss || family$family=="Gamma"&& shape.miss)  ))){   
+  while (iter <= EMmaxit && (!converged || (iter<=9 && random.distribution=='np' && damp && (family$family=="gaussian" && sdev.miss || (family$family=="Gamma"|| family$family=="inverse.gaussian") && shape.miss)  ))){   
       if (verbose){cat(iter,'..')}
 
       # M-Step: Weighted GLM
@@ -332,7 +343,24 @@ function(formula,
        } else {
            shapek<-rep(NA,k)
        }
+      
+ if (family$family=="inverse.gaussian"){
+           if (shape.miss) { shape<-(sum(as.vector(w)*pweights))*1/sum(as.vector(w)*pweights*(Y-fitted(fit))^2/(fitted(fit))^3)}
+           shapek<-rep(shape,k) 
+           if (lambda!=0){
+                for (l in 1:k){
+                  wk<-matrix(1,k,N); wk[1:k,]<-dkern(1:k,l,k,lambda);wk<-t(wk)
+                  shapek[l] <- sum(wk*as.vector(w)*pweights)/ sum(wk* as.vector(w)*pweights*(Y-Mu)^2/Mu^3)
+                }
+                shk<-rep(shapek,rep(N,k))
+           } else {
+                shk<-shape
+           }
+      } else {
+           shapek<-rep(NA,k)
+      }
 
+      
       
       # Calculate loglikelihood for expanded model for this iteration
       f <- switch(family$family,
@@ -340,6 +368,7 @@ function(formula,
               "poisson" =dpois(Y,Mu,log=TRUE),
               "binomial"=dbinom(r,n,Mu,log=TRUE),
                "Gamma"=dgamma(Y,shape=shk/(1-(1-tol)^(damp.power*iter+1))^2,scale=Mu*(1-(1-tol)^(damp.power*iter+1))^2/shk,log=TRUE),
+               "inverse.gaussian"=dinvgauss(Y, Mu, shape= shk/(1-(1-tol)^(damp.power*iter+1))^2, log=TRUE),           
            )
       
       # E-Step: Update weights     
@@ -361,7 +390,7 @@ function(formula,
       # Check for likelihood spikes
       if (random.distribution != 'gq' && spike.protect!=0){
           if (family$family=='gaussian' && abs(min(sdevk/masspoint)) <0.000001*spike.protect){break}  # Avoid Likelihhod Spikes
-          if (family$family=='Gamma' && abs(max(shapek/masspoint))> 10^6*spike.protect){break}
+          if ( (family$family=='Gamma'||family$family=='inverse.gaussian') && abs(max(shapek/masspoint))> 10^6*spike.protect){break}
       }  
   
    }########################### End of EM loop #############
@@ -380,7 +409,8 @@ function(formula,
               "gaussian"= sdev^2*ML.dev[iter]-sdev^2* sum(data$pweights[1:N] * log(2*pi*sdev^2)),
               "poisson" =ML.dev[iter] +2*sum(data$pweights[1:N]*(-Y[1:N]+Y[1:N]*log(Y[1:N]+(Y[1:N]==0))-lfactorial(Y[1:N]))),
               "binomial"=ML.dev[iter] +2*sum(data$pweights[1:N]*(lfactorial(n)-lfactorial(r)-lfactorial(n-r) - n*log(n) + r*log(r+(r==0))+(n-r)*log(n-r+((n-r)==0)))[1:N]),
-              "Gamma"=1/shape*ML.dev[iter]+2/shape*(sum(data$pweights[1:N])*shape*(log(shape)-1)-sum(data$pweights[1:N])*lgamma(shape)-sum(data$pweights[1:N]*log(Y[1:N]))),            
+              "Gamma"=1/shape*ML.dev[iter]+2/shape*(sum(data$pweights[1:N])*shape*(log(shape)-1)-sum(data$pweights[1:N])*lgamma(shape)-sum(data$pweights[1:N]*log(Y[1:N]))),
+                 "inverse.gaussian"=   1/shape*( ML.dev[iter]+ sum(data$pweights[1:N])*log(shape/(2*pi)) - 3*sum(data$pweights[1:N]*log(Y[1:N])) ),      
               )
   
   # Compute  posterior prob. etc.                          
@@ -414,7 +444,7 @@ function(formula,
       par(mfrow=c(2,1), cex=0.5, cex.axis=1.5, cex.lab=1.5)
   }
   if (plot.opt==1|| plot.opt==3){
-      if  ((family$family=="gaussian" && sdev.miss|| family$family=="Gamma" && shape.miss) && damp && random.distribution=='np' && iter>=max(8,ml+1)){
+      if  ((family$family=="gaussian" && sdev.miss|| (family$family=="Gamma"||family$family=="inverse.gaussian") && shape.miss) && damp && random.distribution=='np' && iter>=max(8,ml+1)){
           # Linear interpolation for initial cycles
           ML.dev[2: max(7,ml)]<-ML.dev0+ 1:max(6,ml-1)/ max(7,ml)*(ML.dev[max(8,ml+1)]-ML.dev0) 
       }  

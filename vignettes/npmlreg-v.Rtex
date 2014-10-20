@@ -76,7 +76,7 @@ In this handbook the concept of NPML estimation is briefly explained (Section \r
 Assume there is given a set of explanatory vectors $x_1, \ldots,
 x_n$ and a set of observations  $y_1,\ldots,y_n$ sampled from an
 exponential family distribution\footnote{In the present
-implementation of {\tt alldist}, Gausssian, Poisson, Binomial, and Gamma
+implementation of {\tt alldist}, Gausssian, Poisson, Binomial, Gamma and Inverse Gaussian
 distributed response are supported.}  $f(y_i|\beta,\phi_i)$ with dispersion
 parameter $\phi_i$.  In a generalized linear model, predictors and
 response are assumed to be related through a link function $h$,
@@ -680,9 +680,9 @@ citation(package="npmlreg")
  
 \noindent
 \begin{description}
-\item[EINBECK, J. and HINDE, J.] (2009). Nonparametric maximum
+\item[EINBECK, J. and HINDE, J.] (2014). Nonparametric maximum
      likelihood estimation for random effect models in R. Vignette to R
-     package  {\bf npmlreg} version 0.44.
+     package  {\bf npmlreg}.
 \end{description} 
  
 \section*{Acknowledgments}

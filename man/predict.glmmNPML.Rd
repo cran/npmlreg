@@ -43,11 +43,11 @@ whereby \eqn{\eta_{ik}}{eta_ik} are the fitted linear predictors,
  with \eqn{w_{ik}}{w_ik} replaced by the masses \eqn{\pi_k}{pi_k} of the fitted model. 
 \item the analytical expression for the marginal mean of the responses, 
 if object is of class \code{glmmGQ} and \code{newdata} has been specified. 
-See Aitkin et al. (2005), p. 459, for the formula. This method is only
+See Aitkin et al. (2009), p. 481, for the formula. This method is only
  supported for the logarithmic link function, as otherwise no analytical
   expression for the marginal mean of the responses exists.  
 }
-It is sufficient to write \code{predict} instead of \code{predict.glmmNPML} or 
+It is sufficient to call \code{predict} instead of \code{predict.glmmNPML} or 
 \code{predict.glmmGQ}, since the generic predict function provided in \R automatically selects the right 
  model class.
 
@@ -68,7 +68,7 @@ Aitkin, M. (1996a). A general maximum likelihood analysis of overdispersion in g
 
 Aitkin, M. (1996b). Empirical Bayes shrinkage using posterior random effect means from nonparametric maximum likelihood estimation in general random effect models. Statistical Modelling: Proceedings of the 11th IWSM 1996, 87-94. 
 
-Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. Second Edition, Oxford Statistical Science Series, Oxford, UK. 
+Aitkin, M., Francis, B. and Hinde, J. (2009). Statistical Modelling in R. Oxford Statistical Science Series, Oxford, UK. 
 
 Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistics 14, 109-121. 
 

@@ -64,7 +64,12 @@ allvc(formula,
     the primary sampling units, e.g. groups, clusters, classes, or
     individuals in longitudinal data, and define random coefficients
     accordingly.}
-  \item{family}{conditional distribution of responses. "gaussian", "poisson", "binomial", or "Gamma" can be set. If "gaussian" or "Gamma", then equal component dispersion parameters are assumed, except if the optional parameter lambda is modified.   }
+  \item{family}{conditional distribution of responses: "gaussian",
+    "poisson", "binomial", "Gamma", or "inverse.gaussian" can be set. If
+    "gaussian", "Gamma", or "inverse.gaussian", then equal component
+    dispersion parameters are assumed, except if the optional parameter
+    \code{lambda} is modified. The same link functions as for function
+    \code{\link{glm}} are supported. }
   \item{data}{the data frame (mandatory, even if it is attached to the workspace!). }
   \item{k}{the number of mass points/integration points 
     (supported are up to 600 mass points).}
@@ -78,17 +83,17 @@ allvc(formula,
      by the \code{na.action} setting in \code{options()}. }
   \item{EMmaxit}{maximum number of EM iterations.   }
   \item{EMdev.change}{stops EM algorithm when deviance change falls below this value.  }
-  \item{lambda}{only applicable for Gaussian and Gamma mixtures. If set, standard 
+  \item{lambda}{only applicable for Gaussian, Gamma, and Inverse Gaussian mixtures. If set, standard 
   deviations/ shape parameters are calculated smoothly across components via 
-  a Aitchison-Aitken kernel (\code{\link{dkern}}) with parameter \code{lambda}. 
+  an Aitchison-Aitken kernel (\code{\link{dkern}}) with parameter \code{lambda}. 
   The setting \code{lambda= 0} is automatically mapped to \code{lambda =1/k} and 
   corresponds to the case 'maximal smoothing' (i.e. equal component dispersion parameters), 
   while \code{lambda=1} means 'no smoothing' (unequal disp. param.)}
   \item{damp}{switches EM damping on or off.   }
   \item{damp.power}{steers degree of damping applied on dispersion parameter according 
   to formula \code{1-(1-tol)^(damp.power*iter+1)}, see Einbeck & Hinde (2006).  }
-  \item{spike.protect}{protects algorithm to converge into likelihood spikes for 
-    Gaussian and Gamma mixtures with unequal or smooth component standard deviations,  
+  \item{spike.protect}{for Gaussian, Gamma, and Inverse Gaussian mixtures with unequal or
+    smooth component standard deviations: protects algorithm to converge into likelihood spikes  
     by stopping the EM algorithm if one of the component standard deviations 
     (shape parameters, resp.), divided by the fitted mass points, falls below
      (exceeds, resp.) a certain threshold, which is \code{0.000001*spike.protect} 
@@ -98,8 +103,8 @@ allvc(formula,
      when convergence is not achieved. This can be checked with \code{EMconverged}. }
   \item{sdev}{optional; specifies standard deviation for normally distributed response.
      If unspecified, it will be estimated from the data. }
-  \item{shape}{optional; specifies shape parameter for gamma-distributed response.
-     Setting \code{shape=1} gives an exponential distribution. If unspecified,
+  \item{shape}{optional; specifies shape parameter for Gamma-and IG-distributed response.
+     For Gamma, setting \code{shape=1} gives an exponential distribution. If unspecified,
       it will be estimated from the data. }
   \item{plot.opt}{if equal to zero, then no graphical output is given. 
       For \code{plot.opt=1} the development of the disparity \eqn{-2\log L}{-2logL} over 
@@ -133,7 +138,7 @@ allvc(formula,
   be concentrated or extended by setting \code{tol} smaller or larger than one,
   respectively. 
 
-  Fitting random coefficient models (Aitkin, Francis & Hinde, 2005, pp. 474, p. 491) is 
+  Fitting random coefficient models (Aitkin, Francis & Hinde, 2009, pp. 496, p. 514) is 
   possible by specifying the random term explicitly. Note that the setting 
   \code{random= ~ x} gives a model with a random slope and a random
   intercept, and 
@@ -155,6 +160,14 @@ allvc(formula,
   \code{alldist} equal to 2 will duplicate each data point and hence double the 
   disparity and deviance.  
 
+  The Inverse Gaussian (IG) response distribution is parametrized as usual through the
+  mean and a scaling parameter. We refer to the latter, which is the
+  inverse of the dispersion parameter in exponential family formulation,
+  as \code{shape}.  The canonical "1/mu^2" link is supported, but it is
+  quite tenuous since the linear predictor is likely to become negative
+  after adding the random effect. The \code{log} link behaves more
+  reliably for this distribution.
+  
   For \code{k} \eqn{\ge 54}{>= 54}, mass points with negligible mass
   (i.e. < 1e-50) are omitted.  The maximum number of 'effective' mass points
   is then 198.
@@ -231,7 +244,7 @@ Aitkin, M. (1996b). Empirical Bayes shrinkage using posterior random effect mean
 
 Aitkin, M. (1999). A general maximum likelihood analysis of variance components in generalized linear models. Biometrics 55, 117-128. 
 
-Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. Second Edition, Oxford Statistical Science Series, Oxford, UK. 
+Aitkin, M., Francis, B. and Hinde, J. (2009). Statistical Modelling in R. Oxford Statistical Science Series, Oxford, UK. 
 
 Einbeck, J. & Hinde, J. (2006). A note on NPML estimation for exponential family regression models with unspecified dispersion parameter. Austrian Journal of Statistics 35, 233-243. 
 
@@ -250,7 +263,7 @@ extended, and prepared for publication by Jochen Einbeck & John Hinde (2006).
  }
 \note{ 
 In contrast to the GLIM 4 version, this \R implementation 
-  uses for Gaussian and Gamma mixtures by default a damping procedure in the
+  uses for Gaussian (as well Gamma  and IG) mixtures by default a damping procedure in the
   first cycles of the EM algorithm (Einbeck & Hinde, 2006), which stabilizes
   the algorithm and makes it less sensitive to the optimal 
   choice of \code{tol}. If \code{tol} is very small
@@ -259,7 +272,7 @@ In contrast to the GLIM 4 version, this \R implementation
   Do not use \code{damp.power=0}, as this would mean permanent damping during EM. 
   Using the option \code{pluginz}, one  can to some extent circumvent the 
   necessity to  specify \code{tol} by giving the starting points explicitly. 
-  However, when using \code{pluginz} for normal or gamma-distributed response, 
+  However, when using \code{pluginz} for normal, Gamma- or IG- distributed response, 
   damping will be strictly necessary to ensure that the imposed starting points
   don't get blurred immediately due to initial fluctuations, implying that 
   \code{tol} still plays a role in this case. 

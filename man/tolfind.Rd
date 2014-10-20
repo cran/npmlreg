@@ -5,7 +5,7 @@
 \description{
   Performs a grid search to select the parameter  \code{tol}, 
   which is a tuning parameter for starting point selection of the EM algorithm 
-  for NPML estimation (see e.g. Aitkin, Hinde & Francis, 2005, p. 418)
+  for NPML estimation (see e.g. Aitkin, Hinde & Francis, 2009, p. 437)
 }
 \usage{
 tolfind(formula, 
@@ -37,7 +37,8 @@ tolfind(formula,
   \item{formula}{a formula defining the response and the fixed effects (e.g. \code{y ~ x}). }
   \item{random}{a formula defining the random model. Set \code{random=~1}
        to model overdispersion. }
-  \item{family}{conditional distribution of responses. "gaussian", "poisson", "binomial", or "Gamma" can be set.}
+  \item{family}{conditional distribution of responses: "gaussian",
+    "poisson", "binomial",  "Gamma", or "inverse.gaussian" can be set.}
   \item{data}{the data frame (mandatory, even if it is attached to the workspace!).  }
   \item{k}{the number of mass points/integration points (supported are 
       up to 600 mass points). }
@@ -57,7 +58,7 @@ tolfind(formula,
     smooth component dispersion parameters, the setting \code{spike.protect=1}
     is strongly recommended.  }
   \item{sdev}{optional fixed standard deviation for normal mixture.}
-  \item{shape}{optional fixed shape parameter for Gamma mixture.}
+  \item{shape}{optional fixed shape parameter for Gamma and IG  mixtures.}
    \item{plot.opt}{For \code{plot.opt=1} the EM trajectories are plotted, 
     for \code{plot.opt=2} the development of the disparity \eqn{-2\log L}{-2logL} over 
     iteration number is plotted, for \code{plot.opt=3} both plots are shown, 
@@ -78,7 +79,7 @@ A careful selection of \code{tol} may be necessary for some data sets.
 The reason  is that NPML has a tendency to get stuck in local maxima, 
 as the log-likelihhod function is not concave for fixed \code{k}  (Boehning, 1999).
 
-For Gaussian and Gamma mixtures this R implementation uses by default a damping 
+For Gaussian, Gamma, and IG mixtures this R implementation uses by default a damping 
 procedure  in the first cycles of the EM algorithm (Einbeck & Hinde, 2006), 
 which stabilizes the algorithm and  makes it less sensitive to the optimal choice 
 of \code{tol}.  Application of  \code{tolfind} to check that the optimal  solution has 
@@ -106,7 +107,7 @@ the speed of convergence.
 
    Aitkin, M. (1996). A general maximum likelihood analysis of overdispersion in generalized linear models. Statistics and Computing 6 , 251-262. 
 
-Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. Second Edition, Oxford Statistical Science Series, Oxford, UK. 
+Aitkin, M., Francis, B. and Hinde, J. (2009). Statistical Modelling in R.  Oxford Statistical Science Series, Oxford, UK. 
 
 Boehning, D. (1999). Computer-Assisted Analysis of Mixtures and Applications. Meta-Analysis, Disease Mapping and others. Chapman & Hall / CRC, Boca Raton, FL, USA.
 

@@ -1,6 +1,7 @@
 "print.glmmNPML" <-
 function(x,digits=max(3,getOption("digits")-3), ...){
   np <- length(x$coefficients)
+  if (is.na(x$coef[length(x$coef)])){np<-np-1} ## Sep 2014
   # print(names(x))
   if (np > 0){   
     m <- seq(1,np)[substr(attr(x$coefficients,"names"),1,4)=="MASS"]

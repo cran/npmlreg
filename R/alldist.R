@@ -35,14 +35,16 @@
     print(family)
     stop("`family' not recognized")
   }
-   
+
   data <- as.data.frame(data)   #0.34-1
   ddim <- dim(data)
   mf   <- match.call(expand.dots = FALSE)
  
-  # Test for inadmissibly removed intercept term
-  if (k>1 && random.distribution=='np' && max(length(grep('- 1', deparse(formula(mf)))),length(grep('-1', deparse(formula(mf))))) >0 ){
-      stop(" term '-1'  in model formula not supported for k>1 & random.distribution='np'. ")
+  # intercept term removed?
+  int.removed<-FALSE
+  if (random.distribution=='np' && max(length(grep('- 1', deparse(formula(mf)))),length(grep('-1', deparse(formula(mf))))) >0 ){
+     # stop(" term '-1'  in model formula not supported for k>1 & random.distribution='np'. ")
+     int.removed<-TRUE
   }
 
  
@@ -86,9 +88,14 @@
   rform   <- random
   mform   <- strsplit(as.character(random)[2],'\\|')[[1]]
   mform   <- gsub(' ', '',mform)
+  
   if (length(mform)==2){stop("Please use function allvc for two-level models")}
   if (random.distribution=='gq' && mform!="1"){stop("Random coefficient models are only supported for random.distribution='np'.")}
   
+ if(int.removed && mform=="1"){
+     k<-1
+     cat("k was set equal to 1, since this model cannot have a random component. \n")
+  }   
   
   # Initial fit and simple glm for k=1
   fit    <- glm(formula, family=family, weights=pweights, offset=offset, data=data,...)
@@ -98,7 +105,7 @@
   Y      <- fit$y  
   l0     <- length(fit$coef)
   tol0   <- tol # for main title of graphical output 
-                      
+  
   # For binomial models, check weights: case weights, or number of trials?
   if(family$family=="binomial"){
            data$pweights<- data$pweights^Ym         # these are the actual case weights
@@ -112,18 +119,22 @@
   if (family$family=="gaussian"){
         sdev  <-  ifelse(sdev.miss, sqrt(summary(fit)$dispersion), sdev)
         shape <- 0
-  } else if (family$family =="Gamma") {
+  } else if (family$family =="Gamma" ||family$family =="inverse.gaussian" ) {
          # Estimate sdev from residuals on linear predictor scale, see Einbeck & Hinde (2006):
         sdev  <- ifelse(sdev.miss, sqrt(switch(family$link,
                         "log"= sum(data$pweights*(log(Y)-log(fitted(fit)))^2)/(sum(data$pweights)),
                         "inverse"= sum(data$pweights*(1/Y-1/(fitted(fit)))^2)/(sum(data$pweights)),
                         "identity"= sum(data$pweights*(Y-fitted(fit))^2)/(sum(data$pweights)),
-                        )), sdev) 
-        shape <- ifelse(shape.miss,1/summary(fit)$dispersion, shape)
-  } else {
+                        "1/mu^2"=   sum(data$pweights*(1/(Y^2)-1/(fitted(fit))^2)^2)/(sum(data$pweights)),                    
+                        )), sdev)
+        shape <- ifelse(shape.miss,1/summary(fit)$dispersion, shape)                   
+  } else  {
         sdev  <- 1
         shape <- 0
   } 
+
+
+
   
   # Initial disparity (-2logL)
   ML.dev0 <- -2*sum(data$pweights*switch(family$family,
@@ -131,8 +142,11 @@
                 "poisson" = dpois(fit$y, fitted(fit), log=TRUE),
                 "binomial"= dbinom(Y[,1],Y[,1]+Y[,2], fitted(fit),log=TRUE),
                 "Gamma"   = dgamma(fit$y,  shape=shape, scale=fitted(fit)/shape, log=TRUE),
+                "inverse.gaussian"= dinvgauss(fit$y,fitted(fit), shape=shape, log=TRUE),              
                 ))
 
+
+  
   # Return (glm) output and terminate if k=1  
   if (k == 1) {
       if (random.distribution=="np"){
@@ -195,13 +209,18 @@
   # Generate the random design matrix and append to fixed matrix
   if (random.distribution=='np'){
       # Nonparametric random effect
-      X <- model.matrix(formula,datak)[,-1,drop=FALSE]   
+      X <- model.matrix(formula,datak)[,-1,drop=FALSE]
       datak$MASS <- gl(k,N) 
       if (mform=='1') {
         random <- formula(~MASS-1)
       } else {  
           # Nonparametric random coefficient
-          random <- formula(paste('~ MASS + ',paste(mform,'MASS',sep=":",collapse='+'), '-1',sep=''))    
+          if (!int.removed){
+             random <- formula(paste('~ MASS + ',paste(mform,'MASS',sep=":",collapse='+'), '-1',sep=''))
+         } else{
+             X <- model.matrix(formula,datak)[,,drop=FALSE]
+             random <- formula(paste('~ ',paste(mform,'MASS',sep=":",collapse='+'), '-1',sep=''))
+          }  
       }
   } else {
       X <- model.matrix(formula,datak)
@@ -225,10 +244,10 @@
         sz <- rep(pluginz-fit$coef[[1]],rep(N,k))
       }
   }      
-          
+  
   Eta <- fit$linear.predictor + sz
            # The extra term stops unrelated regressions
-
+                                        
   # Initial EM trajectory values 
   if (random.distribution=="np"){
       tol<- max(min(tol,1),1-damp)  #For tol >  1 or damp=F no Damping
@@ -240,16 +259,26 @@
   } else {
       followmass<-NULL; tol<-1
   }
-   
+
+  
   # Expanded fitted values     
   Mu <- family$linkinv(Eta) 
-
+  
+  if (sum(is.na(Mu))>0){
+     if (family$link=="1/mu^2"){                                                                      
+        warning("The squared reciprocal link will often fail. Try family=...(link=log) instead.")
+     }
+     stop("Unable to transform extended linear predictor to response scale.")
+   }  
+  
   # Calculate loglikelihood for fixed model
   f <- switch(family$family,
               "gaussian" = dnorm(Y,Mu,tol*sdev,log=TRUE),
               "poisson"  = dpois(Y,Mu,log=TRUE),
               "binomial" = dbinom(r,n,Mu,log=TRUE),
-              "Gamma"    = dgamma(Y,shape=shape/tol^2,scale=Mu*tol^2/shape ,log=TRUE),)
+              "Gamma"    = dgamma(Y,shape=shape/tol^2,scale=Mu*tol^2/shape ,log=TRUE),
+              "inverse.gaussian"= dinvgauss(Y, Mu, shape= shape/tol^2, log=TRUE),
+              )
    
 
   # Calculate the weights from initial model
@@ -261,20 +290,22 @@
   iter <- ml<- 1
   converged <- FALSE
   sdevk<-rep(sdev,k);  shapek<-rep(shape,k)
- 
-  ##########Start of EM ##########
-  while (iter <= EMmaxit && (!converged || (iter<=9 && random.distribution=='np' && damp && (family$family=="gaussian" && sdev.miss || family$family=="Gamma"&& shape.miss)  ))){
-      if (verbose){ cat(iter,"..") }
 
+
+  
+  ##########Start of EM ##########
+  while (iter <= EMmaxit && (!converged || (iter<=9 && random.distribution=='np' && damp && (family$family=="gaussian" && sdev.miss || (family$family=="Gamma"|| family$family=="inverse.gaussian")  && shape.miss)  ))){
+      if (verbose){ cat(iter,"..") }      
+       
       # M-Step: Weighted GLM
       fit <- try(glm.fit(x=XZ, y=Y, weights = as.vector(w)*pweights, family = family, offset=offset, ...), silent=TRUE)
       if (class(fit)=="try-error"){
               stop("Singularity or Likelihood-Spike at iteration #",iter,". 
               Check model specification,  enable spike protection or smooth among components.")
       }
-      
+
       # EM Trajectories   
-      if (random.distribution=="np"){   
+      if (random.distribution=="np" && !int.removed ){
           masspoint<- fit$coef[l0:(l0+k-1)]
           followmass<-rbind(followmass, masspoint)
       }
@@ -314,15 +345,35 @@
            shapek<-rep(NA,k)
       }
       
+
+     if (family$family=="inverse.gaussian"){
+           if (shape.miss) { shape<-(sum(as.vector(w)*pweights))*1/sum(as.vector(w)*pweights*(Y-fitted(fit))^2/(fitted(fit))^3)}
+           shapek<-rep(shape,k) 
+           if (lambda!=0){
+                for (l in 1:k){
+                  wk<-matrix(1,k,N); wk[1:k,]<-dkern(1:k,l,k,lambda);wk<-t(wk)
+                  shapek[l] <- sum(wk*as.vector(w)*pweights)/ sum(wk* as.vector(w)*pweights*(Y-Mu)^2/Mu^3)
+                }
+                shk<-rep(shapek,rep(N,k))
+           } else {
+                shk<-shape
+           }
+      } else {
+           shapek<-rep(NA,k)
+      }
+
+      
+      
       # Calculate loglikelihood for expanded model for this iteration
       f <- matrix(switch(family$family,
               "gaussian"=dnorm(Y,Mu,(1-(1-tol)^(damp.power*iter+1))*sk,log=TRUE),
               "poisson" =dpois(Y,Mu,log=TRUE),
               "binomial"=dbinom(r,n,Mu,log=TRUE),
               "Gamma"=dgamma(Y,shape=shk/(1-(1-tol)^(damp.power*iter+1))^2,scale=Mu*(1-(1-tol)^(damp.power*iter+1))^2/shk,log=TRUE),
-              ),nrow=N, ncol=k)
+              "inverse.gaussian"=dinvgauss(Y, Mu, shape= shk/(1-(1-tol)^(damp.power*iter+1))^2, log=TRUE),
+           ),       
+           nrow=N, ncol=k)
               
-       
       # Calculate the component proportions from the weights
       if (random.distribution=='np') {
           p <- as.vector(apply(w*pweights,2,sum))/sum(pweights[1:N]) #16-03-06
@@ -341,11 +392,13 @@
       # Likelihood Spike Protection
       if (random.distribution != 'gq' && spike.protect!=0){
           if (family$family=='gaussian' && abs(min(sdevk/masspoint)) < 0.000001*spike.protect){break}  
-          if (family$family=='Gamma' && abs(max(shapek/masspoint)) > 10^6*spike.protect){break}
+          if ((family$family=='Gamma'||family$family=='inverse.gaussian')  && abs(max(shapek/masspoint)) > 10^6*spike.protect){
+            break
+          }
       }  
   }###########################End of EM loop#############
 
- 
+   
   # Print on screen information on EM convergence
   if (verbose){
       cat("\n")
@@ -356,13 +409,15 @@
         iter-1,"\n")  
       }
   }
+
   
   # Compute model deviance
   Deviance <- switch(family$family,
-              "gaussian"= sdev^2*ML.dev[iter]-sdev^2* sum(data$pweights[1:N] * log(2*pi*sdev^2)),
+              "gaussian"= sdev^2*ML.dev[iter]-sdev^2* log(2*pi*sdev^2)* sum(data$pweights[1:N]),
               "poisson" = ML.dev[iter] +2*sum(data$pweights[1:N]*(-Y[1:N]+Y[1:N]*log(Y[1:N]+ (Y[1:N]==0))-lfactorial(Y[1:N]))),
               "binomial"= ML.dev[iter] +2*sum(data$pweights[1:N]*(lfactorial(n)-lfactorial(r)-lfactorial(n-r) - n*log(n) + r*log(r+(r==0))+(n-r)*log(n-r+((n-r)==0)))[1:N]),
               "Gamma"   = 1/shape*ML.dev[iter]+2/shape*(sum(data$pweights[1:N])*shape*(log(shape)-1)-sum(data$pweights[1:N])*lgamma(shape)-sum(data$pweights[1:N]*log(Y[1:N]))),
+              "inverse.gaussian"=   1/shape*( ML.dev[iter]+ sum(data$pweights[1:N])*log(shape/(2*pi)) - 3*sum(data$pweights[1:N]*log(Y[1:N])) ),
               )
 
   # Compute  posterior prob. etc. 
@@ -372,15 +427,20 @@
   ebp.fitted    <- family$linkinv(ebp)
   ebp.residuals <- Y[1:N]- ebp.fitted
   names(ebp)    <- names(ebp.fitted) <- names(ebp.residuals) <- names0
-  if (mform %in% substring(names(fit$coef),1, nchar(mform))){length(fit$coefficients) <- np <- np-1}# if one variable is random *and* fixed 
+  if (mform %in% substring(names(fit$coef),1, nchar(mform)) &&!int.removed ){length(fit$coefficients) <- np <- np-1}# if one variable is random *and* fixed 
   # if (is.na(fit$coefficients[np])){length(fit$coefficients)<-np<-np-1}# replaced by the line above from 0.42 on
   m <- seq(1,np)[substr(attr(fit$coefficients,'names'),1,4)=='MASS']
   if (random.distribution=="np"){
       mass.points   <-  fit$coefficients[m] # from 0.42
+   #   if (int.removed){          
+   #       print(length(fit$coef))
+   #       fit$coef<-fit$coef[-length(fit$coef)]
+   #       print(fit$coef)
+   #    }    
   } else {  
       a <- ifelse(names(fit$coef[1])== "(Intercept)", fit$coef[1], 0) #02-08-06
       mass.points <- a + fit$coef["z"]*z0           # from 0.42, np replaced by "z"
-  }
+    }
   post.prob     <- matrix(w, nrow=N, byrow=FALSE, dimnames=list(names0, 1:k) )
   post.int      <- as.vector(post.prob %*% mass.points[1:k]); names(post.int) <- names0
 
@@ -396,7 +456,7 @@
       par(mfrow=c(2,1), cex=0.5, cex.axis=1.5, cex.lab=1.5)
   }
   if (plot.opt==1|| plot.opt==3){
-      if  ((family$family=="gaussian" && sdev.miss|| family$family=="Gamma" && shape.miss) && damp  && random.distribution=='np' && iter>=max(8,ml+1)){
+      if  ((family$family=="gaussian" && sdev.miss|| (family$family=="Gamma" ||family$family=="inverse.gaussian") && shape.miss) && damp  && random.distribution=='np' && iter>=max(8,ml+1)){
           # Linear interpolation for initial cycles
           ML.dev[2: max(7,ml)]<-ML.dev0+ 1:max(6,ml-1)/ max(7,ml)*(ML.dev[max(8,ml+1)]-ML.dev0) 
       }  
@@ -437,14 +497,12 @@
               cat("Singularity: EM Trajectory plot not available.", "\n");
               plot.opt<-min(plot.opt,1)
       }
-      if (plot.opt==2|| plot.opt==3){
+      if ((plot.opt==2|| plot.opt==3)&&!int.removed ){
             plot(0:(iter-1),followmass[,1],col=1,type='l',ylim=ylim,ylab='mass points',xlab='EM iterations',  main=plot.main )
             for (i in 1:k){ lines(0:(iter-1), followmass[,i],col=i)
                         if (mform=='1'){ points(rep(iter-1,length(R)),R)}}
             if (verbose){ cat("EM Trajectories plotted.\n")}
       }
-
-   
       
       # glmmNPML output    
       fit <- c( fit[1],

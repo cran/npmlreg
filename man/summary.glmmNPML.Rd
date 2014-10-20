@@ -46,14 +46,14 @@ The \code{summary...}- and \code{print...} -functions invoke the generic
 \note{
   Please note that the provided parameter standard errors tend to be
   underestimated as the uncertainty due to the EM algorithm is not
-  incorporated into them.  According to Aitkin et al (2005), Section 7.6, page
-  428, more accurate standard errors can be obtained by dividing the
+  incorporated into them.  According to Aitkin et al (2009), Section 7.5, page
+  440, more accurate standard errors can be obtained by dividing the
   (absolute value of the) parameter estimate through the square root of
   the change in disparity when omitting/not omitting the variable from the model.
   }
 
 \references{ 
-Aitkin, M., Francis, B. and Hinde, J. (2005). Statistical Modelling in GLIM 4. Second Edition, Oxford Statistical Science Series, Oxford, UK. 
+Aitkin, M., Francis, B. and Hinde, J. (2009). Statistical Modelling in R. Oxford Statistical Science Series, Oxford, UK. 
 }
 
 \author{originally from Ross Darnell (2002), modified and prepared for 
