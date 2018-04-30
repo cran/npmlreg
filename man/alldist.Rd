@@ -302,7 +302,7 @@ In contrast to the GLIM 4 version, this \R implementation
   # [1]  0.912 0.435 0.220 0.675 1.214 0.264 0.413 0.297
 
 # The toxoplasmosis data 
-  data(rainfall, package="forward")
+  data(rainfall)
   rainfall$x<-rainfall$Rain/1000  
   rainfall$x2<- rainfall$x^2; rainfall$x3<- rainfall$x^3
   toxo.np3<- alldist(cbind(Cases,Total-Cases) ~ x+x2+x3, random=~1, 

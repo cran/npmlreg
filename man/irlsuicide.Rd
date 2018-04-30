@@ -26,8 +26,7 @@ with regions as upper level.
 }
 \source{
   Institute of Public Health in Ireland (2005). All
-     Ireland Mortality Database. Retrieved August 8, 2005,
-     from \url{http://mapserver1.cdc-ni.com/iph/index.htm}.
+     Ireland Mortality Database. Retrieved August 8, 2005.
 }
 \references{
       Ahlbom, A.,  (1993). Biostatistics for Epidemiologists. Boca Raton: Lewis Publishers.

@@ -80,7 +80,7 @@ Hinde, J. (1982). Compound Poisson regression models. Lecture Notes in Statistic
 }
 \examples{
  # Toxoplasmosis data:
-    data(rainfall, package="forward")
+    data(rainfall)
     rainfall$x<-rainfall$Rain/1000
     toxo.0.3x<- alldist(cbind(Cases,Total-Cases)~1, random=~x,
           data=rainfall, k=3, family=binomial(link=logit))

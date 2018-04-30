@@ -12,6 +12,7 @@
 \vspace{2cm}
 \author{Jochen Einbeck and John Hinde}
 
+% R CMD build npmlreg --compact-vignettes
 
 %  in R:
 %  library(utils)  % Sweave
@@ -21,7 +22,7 @@
 %  in R:
 %  Stangle("npmlreg.Stex")
 %\VignetteIndexEntry{NPML estimation for random effect models in R} 
-%\VignetteDepends{npmlreg, MASS, forward, nlme}
+%\VignetteDepends{npmlreg, MASS, nlme}
 %\VignetteKeyword{NPML}
 
 
@@ -445,7 +446,7 @@ obtained as a by-product of the EM algorithm.
 The toxoplasmosis data, also called rainfall data, are available via 
 %21
 \begin{Scode}
-data(rainfall, package="forward")
+data(rainfall)
 rainfall$x<-rainfall$Rain/1000  
 rainfall$x2<- rainfall$x^2; rainfall$x3<- rainfall$x^3
 \end{Scode}  

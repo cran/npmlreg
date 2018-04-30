@@ -270,7 +270,8 @@
      }
      stop("Unable to transform extended linear predictor to response scale.")
    }  
-  
+
+    
   # Calculate loglikelihood for fixed model
   f <- switch(family$family,
               "gaussian" = dnorm(Y,Mu,tol*sdev,log=TRUE),
@@ -281,10 +282,10 @@
               )
    
 
-  # Calculate the weights from initial model
+  # Calculate the weights from initial model  
   tmp <-weightslogl.calc.w(p,matrix(f,ncol=k),pweights[1:N])
   w <- tmp$w
-  
+    
   # Initialize for EM loop
   ML.dev <- ML.dev0
   iter <- ml<- 1
@@ -292,11 +293,11 @@
   sdevk<-rep(sdev,k);  shapek<-rep(shape,k)
 
 
-  
   ##########Start of EM ##########
   while (iter <= EMmaxit && (!converged || (iter<=9 && random.distribution=='np' && damp && (family$family=="gaussian" && sdev.miss || (family$family=="Gamma"|| family$family=="inverse.gaussian")  && shape.miss)  ))){
       if (verbose){ cat(iter,"..") }      
-       
+
+         
       # M-Step: Weighted GLM
       fit <- try(glm.fit(x=XZ, y=Y, weights = as.vector(w)*pweights, family = family, offset=offset, ...), silent=TRUE)
       if (class(fit)=="try-error"){
@@ -376,9 +377,11 @@
               
       # Calculate the component proportions from the weights
       if (random.distribution=='np') {
-          p <- as.vector(apply(w*pweights,2,sum))/sum(pweights[1:N]) #16-03-06
+          p <- as.vector(apply(w*pweights[1:N],2,sum))/sum(pweights[1:N])
+          #16-03-06 # 18/09/2017 pweights--> pweights[1:N]
       }
-             
+      
+      
       # E-Step: Update weights 
       tmp <- weightslogl.calc.w(p,f,pweights[1:N])
       w   <- tmp$w
@@ -466,9 +469,9 @@
 
   # Prepare output for glmmNPML objects
   if (random.distribution=="np") {
-      
-      # Mixture proportions 
-      masses <- as.vector(apply(w*pweights,2,sum))/sum(pweights[1:N]) # 16-03-05
+    
+     # Mixture proportions 
+      masses <- as.vector(apply(w*pweights[1:N],2,sum))/sum(pweights[1:N]) # 16-03-05   # 18/09/2017  pweights --> pweights[1:N]
       names(masses) <- paste('MASS',1:k,sep='')
        
       # Estimate random effect standard deviation                  # from 0.42
