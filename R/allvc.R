@@ -168,7 +168,7 @@ function(formula,
               EMiter = 0,
               EMconverged = "none",
               lastglm = list(fit),
-              Misc = list(list(lambda=lambda))
+              Misc = list(list(lambda=lambda, tol=tol0))
               )
       if (random.distribution =="np"){
               class(fit) <- 'glmmNPML'
@@ -223,7 +223,15 @@ function(formula,
       #random <- formula(paste('~',paste(mform1,'z - 1',sep=':'),sep='')) ##R.E.D. 13/2/06 # this case seems to be excluded anyway. 05/11/07 JE
    }
   Z <- model.matrix(random,datak)
-  if (dim(X)[1]!= dim(Z)[1]){cat("The missing value routine cannot cope with this model. Please specify the random term also as fixed term and try again. ")}
+  
+  if (dim(X)[1]!= dim(Z)[1]){ 
+    if (dim(X)[1]== dim(Z)[1]/k && dim(X)[2] <=1) { X<- expand(X,k)} 
+    # corrects possible problems if the data were not provided as a proper data frame, but e.g. as a time series 31/08/18
+    else {
+      cat("The missing value routine cannot cope with this model. Please specify the random term also as fixed term and try again. " )
+    }
+  }
+
   XZ <- cbind(X,Z)
   
   # Set up indices for hierarchical model
@@ -340,11 +348,7 @@ function(formula,
            } else {
                 shk<-shape
            }
-       } else {
-           shapek<-rep(NA,k)
-       }
-      
- if (family$family=="inverse.gaussian"){
+       } else if (family$family=="inverse.gaussian"){
            if (shape.miss) { shape<-(sum(as.vector(w)*pweights))*1/sum(as.vector(w)*pweights*(Y-fitted(fit))^2/(fitted(fit))^3)}
            shapek<-rep(shape,k) 
            if (lambda!=0){
@@ -520,7 +524,7 @@ function(formula,
                 EMiter = iter - 1,
                 EMconverged = converged,
                 lastglm = list(fit),
-                Misc=list(list(Disparity.trend=ML.dev,EMTrajectories=followmass, res=R,ylim=ylim,lambda=lambda,mform=mform1, mform2=mform2))
+                Misc=list(list(Disparity.trend=ML.dev,EMTrajectories=followmass, res=R,ylim=ylim,lambda=lambda,mform=mform1, mform2=mform2, tol=tol0))
                 )
       class(fit) <-'glmmNPML'
   } else {
@@ -554,7 +558,7 @@ function(formula,
                 EMiter = iter - 1,
                 EMconverged = converged,
                 lastglm = list(fit),
-                Misc=list(list(Disparity.trend=ML.dev,  lambda=lambda, mform=mform1, mform2=mform2))
+                Misc=list(list(Disparity.trend=ML.dev,  lambda=lambda, mform=mform1, mform2=mform2, tol=tol0))
                 )
       class(fit) <-'glmmGQ'
   }

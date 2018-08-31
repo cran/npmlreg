@@ -174,7 +174,7 @@
               EMiter = 0,
               EMconverged = "none",
               lastglm = list(fit),
-              Misc = list(list(lambda=lambda))
+              Misc = list(list(lambda=lambda, tol=tol0))
               )          
       if (random.distribution =="np"){
               class(fit) <- 'glmmNPML'
@@ -220,7 +220,7 @@
          } else{
              X <- model.matrix(formula,datak)[,,drop=FALSE]
              random <- formula(paste('~ ',paste(mform,'MASS',sep=":",collapse='+'), '-1',sep=''))
-          }  
+             }  
       }
   } else {
       X <- model.matrix(formula,datak)
@@ -231,7 +231,15 @@
       #} # 05/11/07
   }
   Z <- model.matrix(random,datak)
-  if (dim(X)[1]!= dim(Z)[1]){ cat("The missing value routine cannot cope with this model. Please specify the random term also as fixed term and try again. " )}
+  
+  if (dim(X)[1]!= dim(Z)[1]){ 
+    if (dim(X)[1]== dim(Z)[1]/k && dim(X)[2] <=1) { X<- expand(X,k)} 
+      # corrects possible problems if the data were not provided as a proper data frame, but e.g. as a time series 31/08/18
+    else {
+    cat("The missing value routine cannot cope with this model. Please specify the random term also as fixed term and try again. " )
+    }
+  }
+ 
   XZ <- cbind(X,Z)
   
   # Extend the linear predictor:
@@ -314,6 +322,7 @@
       # Fitted response from current model
       Mu <- fitted(fit)
       
+      
       # Unequal component dispersion parameters  
       if (family$family=="gaussian"){
           if (sdev.miss){ sdev<- sqrt(sum((as.vector(w)*pweights)*(Y-Mu)^2)/sum(as.vector(w)*pweights))}
@@ -342,12 +351,7 @@
            } else {
                 shk<-shape
            }
-      } else {
-           shapek<-rep(NA,k)
-      }
-      
-
-     if (family$family=="inverse.gaussian"){
+      } else if (family$family=="inverse.gaussian"){
            if (shape.miss) { shape<-(sum(as.vector(w)*pweights))*1/sum(as.vector(w)*pweights*(Y-fitted(fit))^2/(fitted(fit))^3)}
            shapek<-rep(shape,k) 
            if (lambda!=0){
@@ -363,7 +367,6 @@
            shapek<-rep(NA,k)
       }
 
-      
       
       # Calculate loglikelihood for expanded model for this iteration
       f <- matrix(switch(family$family,
@@ -536,7 +539,7 @@
                 EMiter = iter - 1,
                 EMconverged = converged,
                 lastglm = list(fit),
-                Misc = list(list(Disparity.trend=ML.dev,EMTrajectories=followmass,res=R,ylim=ylim, lambda=lambda,mform=mform))
+                Misc = list(list(Disparity.trend=ML.dev,EMTrajectories=followmass,res=R,ylim=ylim, lambda=lambda,mform=mform, tol=tol0))
             )
       class(fit) <- 'glmmNPML'
   
@@ -570,7 +573,7 @@
                 EMiter = iter - 1,
                 EMconverged = converged,
                 lastglm = list(fit),
-                Misc = list(list(Disparity.trend=ML.dev, lambda=lambda, mform=mform))
+                Misc = list(list(Disparity.trend=ML.dev, lambda=lambda, mform=mform, tol=tol0))
            )
       class(fit) <- 'glmmGQ'       
   }
